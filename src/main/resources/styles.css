@@ -166,4 +166,15 @@ Note that to shift tabs left/right, both the 2nd value and 4th value have to be 
     -fx-font-size: 13px;
 }
 
+#add-button .ikonli-font-icon {
+    -fx-icon-code: "mdi-plus-box";
+    -fx-icon-color: white;
+    -fx-icon-size: 15px;
+}
+
+.jfx-text-field {
+    -jfx-focus-color: #FF9800;
+    -fx-text-fill: #FFF;
+}
+
 

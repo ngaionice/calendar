@@ -24,7 +24,7 @@ public class CourseManager  {
     }
 
     boolean setBreakdown(String courseID, Map<String, Double> breakdown) {
-        if (Math.abs(100 - breakdown.values().stream().mapToDouble(Double::doubleValue).sum()) < 0.01) {
+        if (Math.abs(100 - breakdown.values().stream().mapToDouble(Double::doubleValue).sum()) <= 0.1) {
             map.get(courseID).setBreakdown(breakdown);
             return true;
         }
