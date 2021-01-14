@@ -1,16 +1,19 @@
-package model.data;
+package model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class Course implements Serializable {
 
     private String name;
-    private Map<String, Integer> breakdown;     // note that the integer is in %, and strings are the assignments and tests' UUID
-    private List<String> recurring;
-    private List<String> oneTime;
+    private Map<String, Double> breakdown;     // note that the integer is in %, and strings are the assignments and tests' UUID
+    private final List<String> recurring = new ArrayList<>();
+    private final List<String> oneTime = new ArrayList<>();
     private final String UUID;
+    private double targetGrade = -1;           // default is -1, if not -1 then it has been set
+    private final List<String> notes = new ArrayList<>();
 
     public Course(String name) {
         this.name = name;
@@ -22,7 +25,7 @@ public class Course implements Serializable {
         this.name = name;
     }
 
-    void setBreakdown(Map<String, Integer> breakdown) {
+    void setBreakdown(Map<String, Double> breakdown) {
         this.breakdown = breakdown;
     }
 
@@ -42,12 +45,20 @@ public class Course implements Serializable {
         oneTime.remove(eventID);
     }
 
+    void setTargetGrade(double targetGrade) {
+        this.targetGrade = targetGrade;
+    }
+
+    void addNotes(String note) {
+        notes.add(note);
+    }
+
     // getters
     String getName() {
         return name;
     }
 
-    Map<String, Integer> getBreakdown() {
+    Map<String, Double> getBreakdown() {
         return breakdown;
     }
 
@@ -59,7 +70,15 @@ public class Course implements Serializable {
         return oneTime;
     }
 
+    double getTargetGrade() {
+        return targetGrade;
+    }
+
     String getID() {
         return UUID;
+    }
+
+    List<String> getNotes() {
+        return notes;
     }
 }

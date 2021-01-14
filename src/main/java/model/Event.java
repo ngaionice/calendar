@@ -1,8 +1,10 @@
-package model.data;
+package model;
 
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Event implements Serializable {
 
@@ -11,6 +13,8 @@ public class Event implements Serializable {
     private Duration duration;
     private boolean recurring;
     private final String UUID;
+    private double grade = -1;       // defaults to -1 if unset
+    private final List<String> notes = new ArrayList<>();
 
     public Event(String name) {
         this.name= name;
@@ -34,6 +38,14 @@ public class Event implements Serializable {
         this.recurring = recurring;
     }
 
+    void setGrade(double grade) {
+        this.grade = grade;
+    }
+
+    void addNotes(String note) {
+        notes.add(note);
+    }
+
     // getters
     String getName() {
         return name;
@@ -51,8 +63,21 @@ public class Event implements Serializable {
         return recurring;
     }
 
+    /**
+     * Returns the actual mark (not percentage) obtained in this assignment.
+     *
+     * @return the numeric grade obtained in this assignment
+     */
+    double getGrade() {
+        return grade;
+    }
+
     String getID() {
         return UUID;
+    }
+
+    List<String> getNotes() {
+        return notes;
     }
 
 

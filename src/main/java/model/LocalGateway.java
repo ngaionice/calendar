@@ -1,8 +1,5 @@
 package model;
 
-import model.data.Course;
-import model.data.Event;
-
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
