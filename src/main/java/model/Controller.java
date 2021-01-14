@@ -24,8 +24,8 @@ public class Controller {
 
     // setters - courses
 
-    public void addCourse(String name) {
-        courses.addCourse(name);
+    public String addCourse(String name) {
+        return courses.addCourse(name);
     }
 
     public void removeCourse(String courseID) {
@@ -71,8 +71,8 @@ public class Controller {
 
     // setters - events
 
-    public void addEvent(String name) {
-        events.addEvent(name);
+    public String addEvent(String name) {
+        return events.addEvent(name);
     }
 
     public void removeEvent(String eventID) {

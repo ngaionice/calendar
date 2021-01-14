@@ -172,9 +172,35 @@ Note that to shift tabs left/right, both the 2nd value and 4th value have to be 
     -fx-icon-size: 15px;
 }
 
+#save .ikonli-font-icon {
+    -fx-icon-code: "mdi-content-save";
+    -fx-icon-color: white;
+    -fx-icon-size: 20px;
+}
+
 .jfx-text-field {
     -jfx-focus-color: #FF9800;
     -fx-text-fill: #FFF;
+}
+
+#time-picker .jfx-time-picker {
+    -fx-border-color: transparent;
+}
+
+.animated-option-button {
+    -fx-background-color: #FF9800;
+    -fx-background-radius: 50px;
+    -fx-pref-height: 50px;
+    -fx-pref-width: 50px;
+    -fx-min-width: -fx-pref-width;
+    -fx-max-width: -fx-pref-width;
+    -fx-min-height: -fx-pref-height;
+    -fx-max-height: -fx-pref-height;
+    -jfx-button-type: RAISED;
+
+}
+.animated-option-button .jfx-rippler{
+    -jfx-rippler-fill: #FFF;
 }
 
 

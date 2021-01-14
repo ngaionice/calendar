@@ -10,9 +10,10 @@ public class CourseManager  {
 
     // setters
 
-    void addCourse(String name) {
+    String addCourse(String name) {
         Course course = new Course(name);
         map.put(course.getID(), course);
+        return course.getID();
     }
 
     void removeCourse(String courseID) {

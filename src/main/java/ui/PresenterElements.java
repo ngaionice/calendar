@@ -1,8 +1,6 @@
 package ui;
 
-import com.jfoenix.controls.JFXButton;
-import com.jfoenix.controls.JFXTabPane;
-import com.jfoenix.controls.JFXTextField;
+import com.jfoenix.controls.*;
 import com.jfoenix.effects.JFXDepthManager;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -17,9 +15,13 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.util.Duration;
+import model.Controller;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.UnaryOperator;
@@ -28,12 +30,16 @@ public class PresenterElements {
 
     Background testBackground = new Background(new BackgroundFill(Color.rgb(27, 27, 27), CornerRadii.EMPTY, Insets.EMPTY));
     Background accentBackground =  new Background(new BackgroundFill(Color.rgb(255, 152, 0), CornerRadii.EMPTY, Insets.EMPTY));
+    Background whiteLightBackground = new Background(new BackgroundFill(Color.rgb(238, 238, 238), new CornerRadii(3), Insets.EMPTY));
 
     Insets margin = new Insets(8);
     Insets mediumMargin = new Insets(16);
     Insets largerMargin = new Insets(24);
 
     Paint white = Paint.valueOf("#FFFFFF");
+    Paint focus = Paint.valueOf("#FF9800");
+    Paint focusLight = Paint.valueOf("#FFB74D");
+    Paint whiteLight = Paint.valueOf("#EEEEEE");
 
     VBox getNav(Scene sc, BorderPane content, PresenterLogic logic) {
         VBox box = new VBox();
@@ -75,7 +81,7 @@ public class PresenterElements {
         });
 
         mainButtons.get(3).setOnAction(event -> {
-            content.setCenter(getAddPane(sc));
+            content.setCenter(getAddPane(sc, logic));
             content.setTop(getHeader(sc, "Add"));
         });
 
@@ -151,17 +157,16 @@ public class PresenterElements {
         return tabs;
     }
 
-    JFXTabPane getAddPane(Scene sc) {
+    JFXTabPane getAddPane(Scene sc, PresenterLogic logic) {
         JFXTabPane tabs = new JFXTabPane();
         tabs.setTabMinWidth(100);
         tabs.setTabMaxWidth(100);
 
-        addTab(tabs, "Course", getCourseCreate(sc));
+        addTab(tabs, "Course", getCourseCreate(sc, logic));
         addTab(tabs, "Assignment", new Label("Blank"));
 
         return tabs;
     }
-
 
     StackPane getCourseOverviewContent(Scene sc, ObservableList<ObservableCourse> courseData) {
         StackPane root = new StackPane();
@@ -208,36 +213,46 @@ public class PresenterElements {
         return root;
     }
 
-    StackPane getCourseCreate(Scene sc) {
+    StackPane getCourseCreate(Scene sc, PresenterLogic logic) {
         StackPane root = new StackPane();
         root.setPadding(mediumMargin);
         root.prefHeightProperty().bind(sc.heightProperty().multiply(0.8));
         root.prefWidthProperty().bind(sc.widthProperty().multiply(0.8));
 
+        StackPane layoutRoot = new StackPane();
         GridPane layout = new GridPane();
         layout.setBackground(testBackground);
         JFXDepthManager.setDepth(layout, 1);
         layout.setPadding(largerMargin);
         layout.setVgap(16);
 
-        JFXTextField name = getTextField(sc, "Course name", 0.5, false);
+        JFXTextField name = getTextField(layoutRoot, "Course name", 0.5, false);
 
         GridPane assessments = new GridPane();
         assessments.setVgap(16);
         assessments.setHgap(16);
 
-        Text breakdownHeader = new Text("Marks breakdown");
-        breakdownHeader.setFill(Paint.valueOf("#FFF"));
+        Text breakdownHeaderText = new Text("Marks breakdown");
+        breakdownHeaderText.setFill(Paint.valueOf("#FFF"));
 
         JFXButton add = new JFXButton();
         add.setGraphic(new FontIcon());
         add.setId("add-button");
 
-        List<JFXTextField> fields = new ArrayList<>();
-        List<JFXTextField> marks = new ArrayList<>();
+        HBox breakdownHeader = new HBox(12);
+        breakdownHeader.getChildren().addAll(Arrays.asList(breakdownHeaderText, add));
+        breakdownHeader.setAlignment(Pos.CENTER_LEFT);
 
-        fields.add(getTextField(sc, "Assignment name", 0.4, false));
-        marks.add(getTextField(sc, "Weight", 0.075, true));
+        final List<JFXTextField>[] names = new List[]{new ArrayList<>()};
+        final List<JFXTextField>[] marks = new List[]{new ArrayList<>()};
+        final List<JFXDatePicker>[] dates = new List[]{new ArrayList<>()};
+        final List<JFXTimePicker>[] times = new List[]{new ArrayList<>()};
+//        List<JFXToggleButton> recurs = new ArrayList<>();
+
+        names[0].add(getTextField(layoutRoot, "Assignment name", 0.3, false));
+        marks[0].add(getTextField(layoutRoot, "Weight", 0.075, true));
+        dates[0].add(getDatePicker(layoutRoot, "Due date", 0.12));
+        times[0].add(getTimePicker(layoutRoot, "Due time", 0.12));
 
         AtomicInteger items = new AtomicInteger(1);
 
@@ -245,31 +260,84 @@ public class PresenterElements {
             if (items.get() < 7) {
                 items.addAndGet(1);
 
-                fields.add(getTextField(sc, "Assignment name", 0.4, false));
-                marks.add(getTextField(sc, "Weight", 0.075, true));
+                names[0].add(getTextField(layoutRoot, "Assignment name", 0.3, false));
+                marks[0].add(getTextField(layoutRoot, "Weight", 0.075, true));
+                dates[0].add(getDatePicker(layoutRoot, "Due date", 0.12));
+                times[0].add(getTimePicker(layoutRoot, "Due time", 0.12));
 
-                assessments.add(fields.get(items.get() - 1), 0, items.get());
-                assessments.add(marks.get(items.get() - 1), 1, items.get());
+                assessments.add(names[0].get(items.get() - 1), 0, items.get());
+                assessments.add(marks[0].get(items.get() - 1), 1, items.get());
+                assessments.add(dates[0].get(items.get() - 1), 2, items.get());
+                assessments.add(times[0].get(items.get() - 1), 3, items.get());
             }
         });
 
         assessments.add(breakdownHeader, 0, 0);
-        assessments.add(add, 1, 0);
-        assessments.add(fields.get(0), 0, 1);
-        assessments.add(marks.get(0), 1, 1);
+        assessments.add(names[0].get(0), 0, 1);
+        assessments.add(marks[0].get(0), 1, 1);
+        assessments.add(dates[0].get(0), 2, 1);
+        assessments.add(times[0].get(0), 3, 1);
 
         layout.add(name, 0, 0);
         layout.add(assessments, 0, 1);
 
-        root.getChildren().addAll(layout);
+        JFXButton save = new JFXButton();
+        save.setGraphic(new FontIcon());
+        save.setId("save");
+
+        AnchorPane anchor = new AnchorPane();
+
+        save.getStyleClass().add("animated-option-button");
+        JFXNodesList fab = new JFXNodesList();
+        fab.addAnimatedNode(save);
+
+        anchor.getChildren().add(layout);
+        anchor.getChildren().add(fab);
+
+        save.setOnAction(event -> {
+            boolean saved = logic.verifyAndAddCourse(name.getText(), names[0], marks[0], dates[0], times[0]);
+            JFXSnackbar popup = new JFXSnackbar(layout);
+            if (saved) {
+                names[0].forEach(TextInputControl::clear);
+                marks[0].forEach(TextInputControl::clear);
+                assessments.getChildren().removeIf(node -> GridPane.getRowIndex(node) >= 2);
+                names[0] = names[0].subList(0, 1);
+                marks[0] = marks[0].subList(0, 1);
+                dates[0] = dates[0].subList(0, 1);
+                times[0] = times[0].subList(0, 1);
+                items.set(1);
+            }
+            HBox textBox = new HBox();
+            Text popupText = new Text(saved ? "Course added" : "Invalid input(s), try again");
+
+            textBox.getChildren().add(popupText);
+            textBox.setAlignment(Pos.CENTER_LEFT);
+            textBox.prefWidthProperty().bind(layoutRoot.widthProperty().multiply(0.5));
+            textBox.prefHeightProperty().bind(layoutRoot.heightProperty().multiply(0.05));
+            textBox.setPadding(mediumMargin);
+            textBox.setBackground(whiteLightBackground);
+
+            popup.enqueue(new JFXSnackbar.SnackbarEvent(textBox, Duration.seconds(3.33), null));
+        });
+
+        AnchorPane.setRightAnchor(layout, 0.0);
+        AnchorPane.setLeftAnchor(layout, 0.0);
+        AnchorPane.setTopAnchor(layout, 0.0);
+        AnchorPane.setBottomAnchor(layout, 0.0);
+
+        AnchorPane.setRightAnchor(fab, 35.0);
+        AnchorPane.setBottomAnchor(fab, 35.0);
+
+        layoutRoot.getChildren().add(anchor);
+        root.getChildren().addAll(layoutRoot);
 
         return root;
     }
 
-    JFXTextField getTextField(Scene sc, String promptText, double bindRatio, boolean numericFilter) {
+    JFXTextField getTextField(Pane root, String promptText, double bindRatio, boolean numericFilter) {
         JFXTextField field = new JFXTextField();
         field.setPromptText(promptText);
-        field.prefWidthProperty().bind(sc.widthProperty().multiply(bindRatio));
+        field.prefWidthProperty().bind(root.widthProperty().multiply(bindRatio));
         field.setLabelFloat(true);
         if (numericFilter) {
             field.setTextFormatter(new TextFormatter<>(getNumericFilter()));
@@ -297,5 +365,41 @@ public class PresenterElements {
             }
             return input;
         };
+    }
+
+    JFXDatePicker getDatePicker(StackPane root, String promptText, double bindRatio) {
+        JFXDatePicker date = new JFXDatePicker();
+        date.setDefaultColor(focus);
+        date.setOverLay(true);
+        date.setDialogParent(root);
+        date.setId("date-picker");
+        date.setPromptText(promptText);
+        date.prefWidthProperty().bind(root.widthProperty().multiply(bindRatio));
+
+        return date;
+    }
+
+    JFXTimePicker getTimePicker(StackPane root, String promptText, double bindRatio) {
+        JFXTimePicker time = new JFXTimePicker();
+        time.setDefaultColor(focus);
+        time.set24HourView(true);
+        time.setOverLay(true);
+        time.setDialogParent(root);
+        time.setId("time-picker");
+        time.setPromptText(promptText);
+        time.prefWidthProperty().bind(root.widthProperty().multiply(bindRatio));
+
+        return time;
+    }
+
+    JFXToggleButton getToggleButton() {
+        JFXToggleButton button = new JFXToggleButton();
+        button.setToggleColor(focus);
+        button.setUnToggleColor(white);
+        button.setToggleLineColor(focusLight);
+        button.setUnToggleLineColor(whiteLight);
+        button.setSize(9);
+
+        return button;
     }
 }

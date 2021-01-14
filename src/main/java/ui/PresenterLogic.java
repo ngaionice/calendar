@@ -1,15 +1,16 @@
 package ui;
 
+import com.jfoenix.controls.JFXDatePicker;
+import com.jfoenix.controls.JFXTextField;
+import com.jfoenix.controls.JFXTimePicker;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.TextField;
 import model.Controller;
 import model.Course;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Observable;
+import java.util.*;
 
 public class PresenterLogic {
 
@@ -47,5 +48,24 @@ public class PresenterLogic {
         }
 
         return courses;
+    }
+
+    boolean verifyAndAddCourse(String name, List<JFXTextField> fields, List<JFXTextField> marks, List<JFXDatePicker> dates, List<JFXTimePicker> times) {
+        double count = 0;
+        for (TextField field: marks) {
+            count += Double.parseDouble(field.getText());
+        }
+        if (Math.abs(count - 100) > 0.01) {
+            return false;
+        }
+        Map<String, Double> map = new HashMap<>(10);
+        for (int i = 0; i < fields.size(); i++) {
+            String eventID = con.addEvent(fields.get(i).getText());
+            con.setEventDueDate(eventID, LocalDateTime.of(dates.get(i).getValue(), times.get(i).getValue()));
+            map.put(eventID, Double.parseDouble(marks.get(i).getText()));
+        }
+        String courseID = con.addCourse(name);
+        con.setCourseBreakdown(courseID, map);
+        return true;
     }
 }

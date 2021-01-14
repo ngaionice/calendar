@@ -12,9 +12,10 @@ public class EventManager {
 
     // setters
 
-    void addEvent(String name) {
+    String addEvent(String name) {
         Event event = new Event(name);
         map.put(event.getID(), event);
+        return event.getID();
     }
 
     void removeEvent(String eventID) {
