@@ -28,8 +28,8 @@ public class PresenterLogic {
             String name = courseInfo.get(id);
 
             List<String> eventIDs = new ArrayList<>();
-            String earliestEvent = "$N/A";
-            LocalDateTime earliestDue = LocalDateTime.now();
+            String earliestEvent = "N/A";
+            LocalDateTime earliestDue = LocalDateTime.of(2999, 10, 10, 10, 30);
             if (includeRecurring) {
                 eventIDs.addAll(con.getRecurringCourseEvents(id));
             }
@@ -43,8 +43,7 @@ public class PresenterLogic {
                     earliestEvent = con.getEventName(eventID);
                 }
             }
-
-            courses.add(new ObservableCourse(name, con.getCourseAverage(id), earliestEvent, earliestDue));
+            courses.add(new ObservableCourse(name, id, con.getCourseAverage(id), earliestEvent, earliestDue));
         }
 
         return courses;
@@ -59,12 +58,16 @@ public class PresenterLogic {
             return false;
         }
         Map<String, Double> map = new HashMap<>(10);
+        String courseID = con.addCourse(name);
         for (int i = 0; i < fields.size(); i++) {
             String eventID = con.addEvent(fields.get(i).getText());
             con.setEventDueDate(eventID, LocalDateTime.of(dates.get(i).getValue(), times.get(i).getValue()));
-            map.put(eventID, Double.parseDouble(marks.get(i).getText()));
+            double mark = marks.get(i).getText().equals("") || marks.get(i).getText().equals(".") ? 0 : Double.parseDouble(marks.get(i).getText());
+            map.put(eventID, mark);
+
+            // TODO: account for recurring events
+            con.addEventToCourse(courseID, eventID, false);
         }
-        String courseID = con.addCourse(name);
         con.setCourseBreakdown(courseID, map);
         return true;
     }

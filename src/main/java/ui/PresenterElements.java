@@ -16,6 +16,7 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
+import javafx.util.converter.DoubleStringConverter;
 import model.Controller;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -200,8 +201,8 @@ public class PresenterElements {
             item.setResizable(false);
         });
 
-        courseData.add(new ObservableCourse("Test course 1", 89.0, "Lecture", LocalDateTime.now()));
-        courseData.add(new ObservableCourse("Test course 2", 80.0, "Assignment 1", LocalDateTime.of(2019, 10, 12, 10, 30)));
+        courseData.add(new ObservableCourse("Test course 1", "test1",89.0, "Lecture", LocalDateTime.now()));
+        courseData.add(new ObservableCourse("Test course 2", "test2",80.0, "Assignment 1", LocalDateTime.of(2019, 10, 12, 10, 30)));
 
         table.getColumns().addAll(items);
         table.setItems(courseData);
@@ -215,7 +216,7 @@ public class PresenterElements {
 
     StackPane getCourseCreate(Scene sc, PresenterLogic logic) {
         StackPane root = new StackPane();
-        root.setPadding(mediumMargin);
+        root.setPadding(largerMargin);
         root.prefHeightProperty().bind(sc.heightProperty().multiply(0.8));
         root.prefWidthProperty().bind(sc.widthProperty().multiply(0.8));
 
@@ -223,7 +224,7 @@ public class PresenterElements {
         GridPane layout = new GridPane();
         layout.setBackground(testBackground);
         JFXDepthManager.setDepth(layout, 1);
-        layout.setPadding(largerMargin);
+        layout.setPadding(mediumMargin);
         layout.setVgap(16);
 
         JFXTextField name = getTextField(layoutRoot, "Course name", 0.5, false);
@@ -334,6 +335,18 @@ public class PresenterElements {
         return root;
     }
 
+    /**
+     * Returns a JFXTextField with labelFloat set to true and prompt text set to the input prompt text, with its width bound to the input Pane specified by the input bindRatio.
+     * If numericFilter is set to true, a numeric filter is also set such that only numeric values can be entered.
+     *
+     * Note that the numeric filter is unable to catch a possible input case of having only a . (period), so this edge case should be accounted for when using it as a field for numbers.
+     *
+     * @param root the Pane to bind the JFXTextField's width to
+     * @param promptText prompt text for the JFXTextField
+     * @param bindRatio the relative ratio of the width of the JFXTextField relative to the pane
+     * @param numericFilter whether a numeric filter should be set to this JFXTextField
+     * @return a JFXTextField
+     */
     JFXTextField getTextField(Pane root, String promptText, double bindRatio, boolean numericFilter) {
         JFXTextField field = new JFXTextField();
         field.setPromptText(promptText);
@@ -341,19 +354,29 @@ public class PresenterElements {
         field.setLabelFloat(true);
         if (numericFilter) {
             field.setTextFormatter(new TextFormatter<>(getNumericFilter()));
+            field.textProperty().addListener(((observable, oldValue, newValue) -> {
+                // this does not catch a singular . and hitting enter; this is accounted for in PresenterLogic.verifyAndAddCourse, and the value gets set to 0
+                if ((!newValue.equals("") && newValue.charAt(0) == '.') || newValue.contains(".") && (newValue.indexOf(".") != newValue.lastIndexOf("."))) {
+                    field.setText(oldValue);
+                }
+            }));
         }
         return field;
     }
 
+    /**
+     * Returns a TextFormatter filter that prevents non-numeric-related values from being entered.
+     *
+     * @return a filter for use with TextFormatter
+     */
     UnaryOperator<TextFormatter.Change> getNumericFilter() {
         return input -> {
             if (input.isAdded()) {
                 String addedText = input.getText();
-                if (addedText.matches("[0-9]{1,2}(.\\d)?")) {
+                if (addedText.matches("[0-9.]")) {
                     return input;
                 }
 
-                // TODO: fix this issue where things aren't getting replaced properly
                 int length = addedText.length();
                 addedText = addedText.replaceAll("[^0-9.]", "");
                 input.setText(addedText);
