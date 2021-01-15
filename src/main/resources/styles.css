@@ -1,21 +1,25 @@
 @font-face {
+    font-family: "Roboto Light";
     src: url("fonts/RobotoLight.ttf");
 }
 
 @font-face {
+    font-family: "Roboto Regular";
     src: url("fonts/RobotoRegular.ttf");
 }
 
 @font-face {
+    font-family: "Roboto Medium";
     src: url("fonts/RobotoMedium.ttf");
 }
 
 @font-face {
+    font-family: "Roboto Slab";
     src: url("fonts/RobotoSlab.ttf");
 }
 
 #header {
-    -fx-font-family: Roboto Regular;
+    -fx-font-family: "Roboto Medium";
 }
 
 .root {
@@ -164,6 +168,7 @@ Note that to shift tabs left/right, both the 2nd value and 4th value have to be 
 #calendar, #courses, #upcoming,
 #add, #settings {
     -fx-font-size: 13px;
+    -fx-font-family: "Roboto Regular";
 }
 
 #add-button .ikonli-font-icon {

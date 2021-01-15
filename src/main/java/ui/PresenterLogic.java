@@ -52,7 +52,9 @@ public class PresenterLogic {
     boolean verifyAndAddCourse(String name, List<JFXTextField> fields, List<JFXTextField> marks, List<JFXDatePicker> dates, List<JFXTimePicker> times) {
         double count = 0;
         for (TextField field: marks) {
-            count += Double.parseDouble(field.getText());
+            if (!field.getText().equals("") && !field.getText().equals(".")) {
+                count += Double.parseDouble(field.getText());
+            }
         }
         if (Math.abs(count - 100) > 0.01) {
             return false;
