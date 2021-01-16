@@ -261,4 +261,22 @@ floating buttons
     -fx-padding: 0 8 0 8;
 }
 
+#dialog-header {
+    -fx-font-family: "Roboto Medium";
+    -fx-font-size: 14px;
+    -fx-fill: white;
+}
+
+#dialog-subheader {
+    -fx-font-family: "Roboto Medium";
+    -fx-font-size: 13px;
+    -fx-fill: white;
+}
+
+#snackbar {
+    -fx-background-color: #EEEEEE;
+    -fx-background-radius: 3;
+}
+
+
 
