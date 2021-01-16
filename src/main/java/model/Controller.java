@@ -1,6 +1,7 @@
 package model;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +76,10 @@ public class Controller {
         return events.addEvent(name);
     }
 
+    public String addRecurringEvent(String name, int suffixStart, int occurrences, LocalDateTime startDate, LocalDate skipDate) {
+        return events.addRecurringEvent(name, suffixStart, occurrences, startDate, skipDate);
+    }
+
     public void removeEvent(String eventID) {
         events.removeEvent(eventID);
     }
@@ -89,10 +94,6 @@ public class Controller {
 
     public void setEventDuration(String eventID, Duration duration) {
         events.setDuration(eventID, duration);
-    }
-
-    public void setEventRecurring(String eventID, boolean recurring) {
-        events.setRecurring(eventID, recurring);
     }
 
     public boolean setEventGrade(String eventID, double grade) {
@@ -125,7 +126,7 @@ public class Controller {
      * Returns a list of recurring events of the specified course.
      *
      * @param courseID ID of the course
-     * @return         list of IDs of recurring events that are of the course
+     * @return         list of recurring IDs that are of the course
      */
     public List<String> getRecurringCourseEvents(String courseID) {
         return courses.getRecurring(courseID);
@@ -192,7 +193,7 @@ public class Controller {
         return events.getDuration(eventID);
     }
 
-    public boolean getEventRecurrence(String eventID) {
+    public String getEventRecurrence(String eventID) {
         return events.getRecurrence(eventID);
     }
 

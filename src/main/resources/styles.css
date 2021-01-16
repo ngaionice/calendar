@@ -57,8 +57,6 @@
     -fx-border-color: #424242;
 }
 
-
-
 .table-view .column-header .label {
     -fx-text-fill: #C7C7C7;
     -fx-font-weight: bold;
@@ -89,6 +87,16 @@
 .table-view:focused .table-row-cell:selected {
     -fx-background-color: transparent;
     -fx-background-insets: 0 0 0 0;
+}
+
+.table-view .scroll-bar * {
+    -fx-min-width: 0;
+    -fx-pref-width: 0;
+    -fx-max-width: 0;
+
+    -fx-min-height: 0;
+    -fx-pref-height: 0;
+    -fx-max-height: 0;
 }
 
 .table-row-cell {
@@ -147,8 +155,8 @@ Note that to shift tabs left/right, both the 2nd value and 4th value have to be 
     -fx-icon-code: "mdi-label";
 }
 
-#add .ikonli-font-icon {
-    -fx-icon-code: "mdi-plus";
+#archive .ikonli-font-icon {
+    -fx-icon-code: "mdi-archive";
 }
 
 #settings .ikonli-font-icon {
@@ -159,14 +167,14 @@ Note that to shift tabs left/right, both the 2nd value and 4th value have to be 
 #calendar .ikonli-font-icon,
 #courses .ikonli-font-icon,
 #upcoming .ikonli-font-icon,
-#add .ikonli-font-icon,
+#archive .ikonli-font-icon,
 #settings .ikonli-font-icon {
     -fx-icon-color: white;
     -fx-icon-size: 13px;
 }
 
 #calendar, #courses, #upcoming,
-#add, #settings {
+#archive, #settings {
     -fx-font-size: 13px;
     -fx-font-family: "Roboto Regular";
 }
@@ -177,10 +185,27 @@ Note that to shift tabs left/right, both the 2nd value and 4th value have to be 
     -fx-icon-size: 15px;
 }
 
+/*
+floating buttons
+*/
+#add .ikonli-font-icon,
 #save .ikonli-font-icon {
-    -fx-icon-code: "mdi-content-save";
     -fx-icon-color: white;
     -fx-icon-size: 20px;
+}
+
+#add .ikonli-font-icon {
+    -fx-icon-code: "mdi-plus";
+}
+
+#save .ikonli-font-icon {
+    -fx-icon-code: "mdi-content-save";
+}
+
+#add-event .ikonli-font-icon {
+    -fx-icon-code: "mdi-plus-box";
+    -fx-icon-color: white;
+    -fx-icon-size: 15px;
 }
 
 .jfx-text-field {
@@ -204,8 +229,36 @@ Note that to shift tabs left/right, both the 2nd value and 4th value have to be 
     -jfx-button-type: RAISED;
 
 }
+
 .animated-option-button .jfx-rippler{
     -jfx-rippler-fill: #FFF;
+}
+
+#dialog {
+    -fx-background-color: #212121;
+}
+
+.date-picker-popup .calendar-grid {
+    -fx-pref-width: 180.0;
+    -fx-pref-height: 120.0;
+}
+
+#save {
+    -fx-background-color: #FF9800;
+    -fx-alignment: CENTER;
+    -fx-pref-height: 32;
+    -fx-pref-width: 56;
+    -fx-background-radius: 3;
+}
+
+#save {
+    -fx-font-family: "Roboto Medium";
+}
+
+#add-nav-button {
+    -fx-alignment: CENTER;
+    -fx-pref-height: 40;
+    -fx-padding: 0 8 0 8;
 }
 
 

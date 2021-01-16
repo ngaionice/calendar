@@ -11,7 +11,7 @@ public class Event implements Serializable {
     private String name;
     private LocalDateTime dueDate;
     private Duration duration;
-    private boolean recurring;
+    private String recurringID;
     private final String UUID;
     private double grade = -1;       // defaults to -1 if unset
     private final List<String> notes = new ArrayList<>();
@@ -34,8 +34,8 @@ public class Event implements Serializable {
         this.duration = duration;
     }
 
-    void setRecurring(boolean recurring) {
-        this.recurring = recurring;
+    void setRecurringID(String recurringID) {
+        this.recurringID = recurringID;
     }
 
     void setGrade(double grade) {
@@ -59,8 +59,8 @@ public class Event implements Serializable {
         return duration;
     }
 
-    boolean getRecurring() {
-        return recurring;
+    String getRecurringID() {
+        return recurringID;
     }
 
     /**

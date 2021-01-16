@@ -9,8 +9,8 @@ public class Course implements Serializable {
 
     private String name;
     private Map<String, Double> breakdown;     // note that the integer is in %, and strings are the assignments and tests' UUID
-    private final List<String> recurring = new ArrayList<>();
-    private final List<String> oneTime = new ArrayList<>();
+    private final List<String> recurring = new ArrayList<>();   // list of recurringIDs
+    private final List<String> oneTime = new ArrayList<>();     // list of eventIDs
     private final String UUID;
     private double targetGrade = -1;           // default is -1, if not -1 then it has been set
     private final List<String> notes = new ArrayList<>();
@@ -29,12 +29,12 @@ public class Course implements Serializable {
         this.breakdown = breakdown;
     }
 
-    void addRecurring(String eventID) {
-        recurring.add(eventID);
+    void addRecurring(String recurringID) {
+        recurring.add(recurringID);
     }
 
-    void removeRecurring(String eventID) {
-        recurring.remove(eventID);
+    void removeRecurring(String recurringID) {
+        this.recurring.remove(recurringID);
     }
 
     void addOneTime(String eventID) {

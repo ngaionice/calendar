@@ -32,12 +32,12 @@ public class CourseManager  {
         return false;
     }
 
-    void addRecurring(String courseID, String eventID) {
-        map.get(courseID).addRecurring(eventID);
+    void addRecurring(String courseID, String recurringID) {
+        map.get(courseID).addRecurring(recurringID);
     }
 
-    void removeRecurring(String courseID, String eventID) {
-        map.get(courseID).removeRecurring(eventID);
+    void removeRecurring(String courseID, String recurringID) {
+        map.get(courseID).removeRecurring(recurringID);
     }
 
     void addOneTime(String courseID, String eventID) {
