@@ -33,20 +33,12 @@ public class Controller {
         courses.removeCourse(courseID);
     }
 
-    /**
-     * If the course breakdown values sums up to 100 (or within a tolerance of 0.01), sets the grade breakdown of the course, and returns true.
-     * Returns false otherwise.
-     *
-     * @param courseID  course ID of the course
-     * @param breakdown a map with event ID as keys, and double as values representing the proportion (multiplied by 100).
-     * @return true if the breakdown was set
-     */
-    public boolean setCourseBreakdown(String courseID, Map<String, Double> breakdown) {
-        return courses.setBreakdown(courseID, breakdown);
-    }
-
     public void setCourseName(String courseID, String name) {
         courses.setName(courseID, name);
+    }
+
+    public void setCourseCode(String courseID, String courseCode) {
+        courses.setCode(courseID, courseCode);
     }
 
     public void addEventToCourse(String courseID, String eventID, boolean recurring) {
@@ -106,9 +98,9 @@ public class Controller {
     // getters - courses
 
     /**
-     * Returns the IDs and names of all courses.
+     * Returns the IDs and codes of all courses.
      *
-     * @return a map containing all stored courses; key is course ID, value is course name
+     * @return a map containing all stored courses; key is course ID, value is course code
      */
     public Map<String, String> getAllCourseInfo() {
         return courses.getAllCourseInfo();
@@ -118,25 +110,25 @@ public class Controller {
         return courses.getName(courseID);
     }
 
-    public Map<String, Double> getCourseBreakdown(String courseID) {
-        return courses.getBreakdown(courseID);
+    public String getCourseCode(String courseID) {
+        return courses.getCode(courseID);
     }
 
     /**
-     * Returns a list of recurring events of the specified course.
+     * Returns a list of recurring events' IDs of the specified course.
      *
      * @param courseID ID of the course
-     * @return         list of recurring IDs that are of the course
+     * @return list of recurring IDs that are of the course
      */
     public List<String> getRecurringCourseEvents(String courseID) {
         return courses.getRecurring(courseID);
     }
 
     /**
-     * Returns a list of one time events of the specified course.
+     * Returns a list of one time events' IDs of the specified course.
      *
      * @param courseID ID of the course
-     * @return         list of IDs of one time events that are of the course
+     * @return list of IDs of one time events that are of the course
      */
     public List<String> getOneTimeCourseEvents(String courseID) {
         return courses.getOneTime(courseID);
@@ -151,21 +143,19 @@ public class Controller {
     }
 
     public double getCourseAverage(String courseID) {
-        Map<String, Double> breakdown = getCourseBreakdown(courseID);
+        List<String> eventIDs = courses.getOneTime(courseID);
         double assessed = 0;
         double assessedMax = 0;
-
-        for (String eventID: breakdown.keySet()) {
-            double weight = breakdown.get(eventID);
-            double obtained = events.getGrade(eventID);
-            if (obtained != -1) {
-                assessed += obtained;
-                assessedMax += weight;
+        for (String eventID : eventIDs) {
+            double grade = events.getGrade(eventID);
+            double weight = events.getWeight(eventID);
+            if (grade != -1 && weight != -1) {
+                assessed += grade * weight / 100;
+                assessedMax += events.getWeight(eventID);
             }
         }
-
         if (assessedMax != 0) {
-            return Math.round(100 * assessed/assessedMax);
+            return assessed / assessedMax;
         }
         return -1;
     }
@@ -173,9 +163,9 @@ public class Controller {
     // getters - events
 
     /**
-     * Returns a map containing all events' name, event ID, and due date.
+     * Returns a map containing all events' name, event ID, due date, grade and weight. Note that grades and weights default to -1 if they weren't set.
      *
-     * @return a map with event ID as key, and a string array of format [event name, event due date]
+     * @return a map with event ID as key, and a string array of format [event name, event due date, grade, weight]
      */
     public Map<String, String[]> getAllEventInfo() {
         return events.getAllEventInfo();
@@ -203,6 +193,10 @@ public class Controller {
 
     public double getEventGrade(String eventID) {
         return events.getGrade(eventID);
+    }
+
+    public double getEventWeight(String eventID) {
+        return events.getWeight(eventID);
     }
 
     public List<String> getEventNotes(String eventID) {

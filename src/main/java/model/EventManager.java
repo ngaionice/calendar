@@ -77,6 +77,14 @@ public class EventManager {
         return false;
     }
 
+    boolean setWeight(String eventID, double weight) {
+        if (weight >= 0) {
+            map.get(eventID).setWeight(weight);
+            return true;
+        }
+        return false;
+    }
+
     void addNotes(String eventID, String notes) {
         map.get(eventID).addNotes(notes);
     }
@@ -107,10 +115,15 @@ public class EventManager {
         return map.get(eventID).getGrade();
     }
 
+    double getWeight(String eventID) {
+        return map.get(eventID).getWeight();
+    }
+
     Map<String, String[]> getAllEventInfo() {
         Map<String, String[]> info = new HashMap<>(100);
         for (String eventID : map.keySet()) {
-            info.put(eventID, new String[]{map.get(eventID).getName(), map.get(eventID).getDueDate().toString()});
+            info.put(eventID, new String[]{map.get(eventID).getName(), map.get(eventID).getDueDate().toString(),
+                    String.valueOf(map.get(eventID).getGrade()), String.valueOf(map.get(eventID).getWeight())});
         }
         return info;
     }

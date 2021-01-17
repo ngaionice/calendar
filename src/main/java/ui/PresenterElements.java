@@ -109,8 +109,8 @@ public class PresenterElements {
 
     JFXTabPane getTabPane() {
         JFXTabPane tabs = new JFXTabPane();
-        tabs.setTabMinWidth(100);
-        tabs.setTabMaxWidth(100);
+        tabs.setTabMinWidth(104);
+        tabs.setTabMaxWidth(104);
 
         addTab(tabs, "CSC263", new Label("Blank Calendar"));
         addTab(tabs, "CSC343", new Label("Blank Courses"));
@@ -143,27 +143,18 @@ public class PresenterElements {
 
     JFXTabPane getCoursesPane(Scene sc, PresenterLogic logic) {
         JFXTabPane tabs = new JFXTabPane();
-        tabs.setTabMinWidth(100);
-        tabs.setTabMaxWidth(100);
+        tabs.setTabMinWidth(104);
+        tabs.setTabMaxWidth(104);
+        tabs.setTabMinHeight(24);
 
         addTab(tabs, "Overview", getCourseOverviewContent(sc, logic));
 
         ObservableList<ObservableCourse> courses = logic.getCourses(true);
-//        courses.add(new ObservableCourse("Test course 1", "test1",89.0, "Lecture", LocalDateTime.now()));
-//        courses.add(new ObservableCourse("Test course 2", "test2",80.0, "Assignment 1", LocalDateTime.of(2019, 10, 12, 10, 30)));
 
         for (ObservableCourse course: courses) {
-            String name = course.nameProperty().get();
-            addTab(tabs, name, getCourseContent(sc, course, logic));
+            String code = course.codeProperty().get();
+            addTab(tabs, code, getCourseContent(sc, course, logic));
         }
-
-
-//        addTab(tabs, "CSC263", new Label("Blank 263"));
-//        addTab(tabs, "CSC343", new Label("Blank 343"));
-//        addTab(tabs, "STA305", new Label("Blank 305"));
-//        addTab(tabs, "STA355", new Label("Blank 355"));
-//        addTab(tabs, "PCL201", new Label("Blank 201"));
-
         return tabs;
     }
 
@@ -268,22 +259,25 @@ public class PresenterElements {
         table.setFixedCellSize(48);
         table.setPadding(mediumMargin);
 
+        TableColumn<ObservableCourse, String> codeCol = new TableColumn<>("Course code");
         TableColumn<ObservableCourse, String> nameCol = new TableColumn<>("Course name");
         TableColumn<ObservableCourse, Double> avgCol = new TableColumn<>("Average");
         TableColumn<ObservableCourse, String> nextEventCol = new TableColumn<>("Next event");
         TableColumn<ObservableCourse, Double> nextDueCol = new TableColumn<>("Due date");
 
+        codeCol.setCellValueFactory(new PropertyValueFactory<>("code"));
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
         avgCol.setCellValueFactory(new PropertyValueFactory<>("avg"));
         nextEventCol.setCellValueFactory(new PropertyValueFactory<>("nextEvent"));
         nextDueCol.setCellValueFactory(new PropertyValueFactory<>("nextDue"));
 
-        nameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.32));
-        nextEventCol.prefWidthProperty().bind(table.widthProperty().multiply(0.32));
-        nextDueCol.prefWidthProperty().bind(table.widthProperty().multiply(0.20));
+        codeCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
+        nameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.28));
+        nextEventCol.prefWidthProperty().bind(table.widthProperty().multiply(0.28));
+        nextDueCol.prefWidthProperty().bind(table.widthProperty().multiply(0.16));
         avgCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
 
-        List<TableColumn<ObservableCourse, ?>> items = Arrays.asList(nameCol, nextEventCol, nextDueCol, avgCol);
+        List<TableColumn<ObservableCourse, ?>> items = Arrays.asList(codeCol, nameCol, nextEventCol, nextDueCol, avgCol);
         items.forEach(item -> {
             item.getStyleClass().add("text-col");
             item.setResizable(false);
@@ -291,8 +285,8 @@ public class PresenterElements {
 
         ObservableList<ObservableCourse> courseData = logic.getCourses(true);
 
-        courseData.add(new ObservableCourse("Test course 1", "test1",89.0, "Lecture", LocalDateTime.now()));
-        courseData.add(new ObservableCourse("Test course 2", "test2",80.0, "Assignment 1", LocalDateTime.of(2019, 10, 12, 10, 30)));
+        courseData.add(new ObservableCourse("Test course 1", "TEST101","test1",89.0, "Lecture", LocalDateTime.now()));
+        courseData.add(new ObservableCourse("Test course 2", "TEST102","test2",80.0, "Assignment 1", LocalDateTime.of(2019, 10, 12, 10, 30)));
 
         table.getColumns().addAll(items);
         table.setItems(courseData);
@@ -303,10 +297,11 @@ public class PresenterElements {
         addCourse.getStyleClass().add("animated-option-button");
 
 
-        JFXDialog addDialog = getCourseCreateDialog(root, 0.8, 0.9);
-        root.getChildren().add(addDialog);
-
-        addCourse.setOnAction(click -> addDialog.show());
+        addCourse.setOnAction(click -> {
+            JFXDialog addDialog = getCourseCreateDialog(root, 0.8, 0.9);
+            root.getChildren().add(addDialog);
+            addDialog.show();
+        });
 
         JFXNodesList fab = new JFXNodesList();
         fab.addAnimatedNode(addCourse);
@@ -478,8 +473,8 @@ public class PresenterElements {
         save.setOnAction(event -> {
             boolean saved = logic.verifyAndAddCourse(courseName.get(), eventNames, marks, recurrings, dates, times, skipDates, occurrences, offsets, grid3.getRowConstraints().size());
             if (saved) {
-                System.out.println("saved course");
                 dialog.close();
+                root.getChildren().remove(dialog);
                 confirmation.enqueue(getSnackbarEvent(root, "Course added, please refresh the tab to see changes", 0.64, 0.08));
             } else {
                 System.out.println("not saved");
@@ -516,7 +511,7 @@ public class PresenterElements {
      * Returns a JFXTextField with labelFloat set to true and prompt text set to the input prompt text, with its width bound to the input Pane specified by the input bindRatio.
      * If numericFilter is set to true, a numeric filter is also set such that only numeric values can be entered.
      *
-     * Note that the numeric filter is unable to catch a possible input case of having only a . (period), so this edge case should be accounted for when using it as a field for numbers.
+     * Note that the numeric filter is unable to catch input cases of ending with a . (period), so this edge case should be accounted for when using it as a field for numbers.
      *
      * @param root the Pane to bind the JFXTextField's width to
      * @param promptText prompt text for the JFXTextField
@@ -532,7 +527,7 @@ public class PresenterElements {
         if (numericFilter) {
             field.setTextFormatter(new TextFormatter<>(getNumericFilter()));
             field.textProperty().addListener(((observable, oldValue, newValue) -> {
-                // this does not catch a singular . and hitting enter; this is accounted for in PresenterLogic.verifyAndAddCourse, and the value gets set to 0
+                // this does not catch inputs ending with .
                 if ((!newValue.equals("") && newValue.charAt(0) == '.') || newValue.contains(".") && (newValue.indexOf(".") != newValue.lastIndexOf("."))) {
                     field.setText(oldValue);
                 }

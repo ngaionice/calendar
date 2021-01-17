@@ -8,13 +8,15 @@ import java.time.format.DateTimeFormatter;
 public class ObservableCourse {
 
     private final StringProperty name;
+    private final StringProperty code;
     private final DoubleProperty avg;
     private final StringProperty nextEvent;
     private final StringProperty nextDue;
     private final StringProperty id;
 
-    public ObservableCourse(String name, String id, double avg, String nextEvent, LocalDateTime nextDue) {
+    public ObservableCourse(String name, String code, String id, double avg, String nextEvent, LocalDateTime nextDue) {
         this.name = new SimpleStringProperty(name);
+        this.code = new SimpleStringProperty(code);
         this.id = new SimpleStringProperty(id);
         this.avg = new SimpleDoubleProperty(avg);
         this.nextEvent = new SimpleStringProperty(nextEvent);
@@ -23,6 +25,10 @@ public class ObservableCourse {
 
     public StringProperty nameProperty() {
         return name;
+    }
+
+    public StringProperty codeProperty() {
+        return code;
     }
 
     public StringProperty idProperty() {

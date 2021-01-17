@@ -27,7 +27,7 @@ public class PresenterLogic {
         Map<String, String> courseInfo = con.getAllCourseInfo();
 
         for (String id: courseInfo.keySet()) {
-            String name = courseInfo.get(id);
+            String code = courseInfo.get(id);
 
             List<String> eventIDs = new ArrayList<>();
             String earliestEvent = "N/A";
@@ -45,7 +45,7 @@ public class PresenterLogic {
                     earliestEvent = con.getEventName(eventID);
                 }
             }
-            courses.add(new ObservableCourse(name, id, con.getCourseAverage(id), earliestEvent, earliestDue));
+            courses.add(new ObservableCourse(con.getCourseName(id), code, id, con.getCourseAverage(id), earliestEvent, earliestDue));
         }
 
         return courses;
@@ -61,11 +61,11 @@ public class PresenterLogic {
         for (String eventID: eventIDs) {
             if (pastEvents) {
                 if (LocalDateTime.now().isAfter(con.getEventDueDate(eventID))) {
-                    events.add(new ObservableEvent(con.getEventName(eventID), eventID, con.getEventDueDate(eventID), con.getEventGrade(eventID)));
+                    events.add(new ObservableEvent(con.getEventName(eventID), eventID, con.getEventDueDate(eventID), con.getEventGrade(eventID), con.getEventWeight(eventID)));
                 }
             } else {
                 if (LocalDateTime.now().isBefore(con.getEventDueDate(eventID))) {
-                    events.add(new ObservableEvent(con.getEventName(eventID), eventID, con.getEventDueDate(eventID), con.getEventGrade(eventID)));
+                    events.add(new ObservableEvent(con.getEventName(eventID), eventID, con.getEventDueDate(eventID), con.getEventGrade(eventID), con.getEventWeight(eventID)));
                 }
             }
         }
@@ -114,13 +114,6 @@ public class PresenterLogic {
                     con.addEventToCourse(courseID, eventID, false);
                 }
             }
-
-            // create the mark breakdown
-            Map<String, Double> breakdown = new HashMap<>(10);
-            for (int i = 0; i < events.size(); i++) {
-                breakdown.put(events.get(i), Double.parseDouble(marks[i]));
-            }
-            con.setCourseBreakdown(courseID, breakdown);
 
             return true;
         }

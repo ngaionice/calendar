@@ -7,6 +7,7 @@ import java.util.Map;
 public class CourseManager  {
 
     private Map<String, Course> map = new HashMap<>(10);
+    private Map<String, Course> archived = new HashMap<>(20);
 
     // setters
 
@@ -24,12 +25,8 @@ public class CourseManager  {
         map.get(courseID).setName(name);
     }
 
-    boolean setBreakdown(String courseID, Map<String, Double> breakdown) {
-        if (Math.abs(100 - breakdown.values().stream().mapToDouble(Double::doubleValue).sum()) <= 0.1) {
-            map.get(courseID).setBreakdown(breakdown);
-            return true;
-        }
-        return false;
+    void setCode(String courseID, String code) {
+        map.get(courseID).setCode(code);
     }
 
     void addRecurring(String courseID, String recurringID) {
@@ -66,8 +63,8 @@ public class CourseManager  {
         return map.get(courseID).getName();
     }
 
-    Map<String, Double> getBreakdown(String courseID) {
-        return map.get(courseID).getBreakdown();
+    String getCode(String courseID) {
+        return map.get(courseID).getCode();
     }
 
     List<String> getRecurring(String courseID) {
@@ -85,7 +82,7 @@ public class CourseManager  {
     Map<String, String> getAllCourseInfo() {
         Map<String, String> info = new HashMap<>(20);
         for (String courseID: map.keySet()) {
-            info.put(courseID, map.get(courseID).getName());
+            info.put(courseID, map.get(courseID).getCode());
         }
         return info;
     }

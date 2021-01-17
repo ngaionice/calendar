@@ -14,6 +14,7 @@ public class Event implements Serializable {
     private String recurringID;
     private final String UUID;
     private double grade = -1;       // defaults to -1 if unset
+    private double weight = -1;
     private final List<String> notes = new ArrayList<>();
 
     public Event(String name) {
@@ -42,6 +43,10 @@ public class Event implements Serializable {
         this.grade = grade;
     }
 
+    void setWeight(double weight) {
+        this.weight = weight;
+    }
+
     void addNotes(String note) {
         notes.add(note);
     }
@@ -64,12 +69,16 @@ public class Event implements Serializable {
     }
 
     /**
-     * Returns the actual mark (not percentage) obtained in this assignment.
+     * Returns the percentage obtained in this assignment.
      *
-     * @return the numeric grade obtained in this assignment
+     * @return the percentage obtained in this assignment
      */
     double getGrade() {
         return grade;
+    }
+
+    double getWeight() {
+        return weight;
     }
 
     String getID() {

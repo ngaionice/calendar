@@ -8,7 +8,7 @@ import java.util.Map;
 public class Course implements Serializable {
 
     private String name;
-    private Map<String, Double> breakdown;     // note that the integer is in %, and strings are the assignments and tests' UUID
+    private String code;
     private final List<String> recurring = new ArrayList<>();   // list of recurringIDs
     private final List<String> oneTime = new ArrayList<>();     // list of eventIDs
     private final String UUID;
@@ -25,8 +25,8 @@ public class Course implements Serializable {
         this.name = name;
     }
 
-    void setBreakdown(Map<String, Double> breakdown) {
-        this.breakdown = breakdown;
+    void setCode(String code) {
+        this.code = code;
     }
 
     void addRecurring(String recurringID) {
@@ -58,8 +58,8 @@ public class Course implements Serializable {
         return name;
     }
 
-    Map<String, Double> getBreakdown() {
-        return breakdown;
+    String getCode() {
+        return code;
     }
 
     List<String> getRecurring() {
