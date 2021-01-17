@@ -8,8 +8,8 @@ import java.util.*;
 
 public class EventManager {
 
-    private Map<String, Event> map;
-    private Map<String, String> recurringMap;   // key is recurringID, value is name
+    private Map<String, Event> map = new HashMap<>(10);
+    private Map<String, String> recurringMap = new HashMap<>(10);   // key is recurringID, value is name
 
     // note that there are 2 types of ID here: recurringID and eventID;
     // a recurringID is a variable in an Event, and is used for grouping purposes;

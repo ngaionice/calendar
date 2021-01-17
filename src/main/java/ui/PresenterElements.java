@@ -141,46 +141,120 @@ public class PresenterElements {
         return root;
     }
 
-    Text getTextH2(String string, String color) {
-        Text text = new Text(string);
-        text.setFont(Font.font("Roboto Medium",15));
-        text.setFill(Paint.valueOf(color));
-        return text;
-    }
-
-    Text getTextNormal(String string, Paint color) {
-        Text text = new Text(string);
-        text.setFont(Font.font("Roboto Regular",12));
-        text.setFill(color);
-
-        return text;
-    }
-
     JFXTabPane getCoursesPane(Scene sc, PresenterLogic logic) {
         JFXTabPane tabs = new JFXTabPane();
         tabs.setTabMinWidth(100);
         tabs.setTabMaxWidth(100);
 
         addTab(tabs, "Overview", getCourseOverviewContent(sc, logic));
-        addTab(tabs, "CSC263", new Label("Blank 263"));
-        addTab(tabs, "CSC343", new Label("Blank 343"));
-        addTab(tabs, "STA305", new Label("Blank 305"));
-        addTab(tabs, "STA355", new Label("Blank 355"));
-        addTab(tabs, "PCL201", new Label("Blank 201"));
+
+        ObservableList<ObservableCourse> courses = logic.getCourses(true);
+//        courses.add(new ObservableCourse("Test course 1", "test1",89.0, "Lecture", LocalDateTime.now()));
+//        courses.add(new ObservableCourse("Test course 2", "test2",80.0, "Assignment 1", LocalDateTime.of(2019, 10, 12, 10, 30)));
+
+        for (ObservableCourse course: courses) {
+            String name = course.nameProperty().get();
+            addTab(tabs, name, getCourseContent(sc, course, logic));
+        }
+
+
+//        addTab(tabs, "CSC263", new Label("Blank 263"));
+//        addTab(tabs, "CSC343", new Label("Blank 343"));
+//        addTab(tabs, "STA305", new Label("Blank 305"));
+//        addTab(tabs, "STA355", new Label("Blank 355"));
+//        addTab(tabs, "PCL201", new Label("Blank 201"));
 
         return tabs;
     }
 
-//    JFXTabPane getAddPane(Scene sc) {
-//        JFXTabPane tabs = new JFXTabPane();
-//        tabs.setTabMinWidth(100);
-//        tabs.setTabMaxWidth(100);
-//
-//        addTab(tabs, "Courses", getCourseCreate());
-//        addTab(tabs, "Assignments", getEventCreate());
-//
-//        return tabs;
-//    }
+    StackPane getCourseContent(Scene sc, ObservableCourse course, PresenterLogic logic) {
+        StackPane root = new StackPane();
+        root.setPadding(largerMargin);
+
+        GridPane grid = new GridPane();
+        grid.setPadding(mediumMargin);
+        grid.setBackground(testBackground);
+        grid.setVgap(12);
+
+        root.getChildren().add(grid);
+        JFXDepthManager.setDepth(grid, 1);
+
+        HBox infoHeader = new HBox();
+        infoHeader.setAlignment(Pos.BOTTOM_LEFT);
+        infoHeader.prefWidthProperty().bind(grid.widthProperty());
+        infoHeader.setPadding(new Insets(0, 52, 0, 4));
+
+        VBox courseInfo = new VBox(16);
+        Text courseName = new Text(course.nameProperty().get());
+        courseName.setId("content-header");
+        Text nextAssignment = new Text(course.nextEventProperty().get() + " due at " + course.nextDueProperty().get());
+        nextAssignment.setId("content-subheader");
+        courseInfo.getChildren().addAll(Arrays.asList(courseName, nextAssignment));
+
+        VBox averageInfo = new VBox(8);
+        Text courseAverage = new Text(String.valueOf(course.avgProperty().get()));
+        courseAverage.setId("content-supersize");
+        Text courseAverageText = new Text("Current Average");
+        courseAverageText.setId("content-subheader");
+        averageInfo.setAlignment(Pos.CENTER);
+        averageInfo.getChildren().addAll(Arrays.asList(courseAverage, courseAverageText));
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        infoHeader.getChildren().addAll(Arrays.asList(courseInfo, spacer, averageInfo));
+
+        TableView<ObservableEvent> upcoming = new TableView<>();
+        upcoming.prefWidthProperty().bind(grid.widthProperty());
+        upcoming.prefHeightProperty().bind(sc.heightProperty().multiply(0.5));
+        upcoming.setFixedCellSize(48);
+
+        TableView<ObservableEvent> past = new TableView<>();
+        past.prefWidthProperty().bind(grid.widthProperty());
+        past.prefHeightProperty().bind(sc.heightProperty().multiply(0.3));
+        past.setFixedCellSize(48);
+
+        TableColumn<ObservableEvent, String> nameCol = new TableColumn<>("Past events");
+        TableColumn<ObservableEvent, String> dueDateCol = new TableColumn<>("Due date");
+        TableColumn<ObservableEvent, Double> markCol = new TableColumn<>("Mark");
+
+        nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+        dueDateCol.setCellValueFactory(new PropertyValueFactory<>("dueDate"));
+        markCol.setCellValueFactory(new PropertyValueFactory<>("mark"));
+
+        TableColumn<ObservableEvent, String> nameColU = new TableColumn<>("Upcoming events");
+        TableColumn<ObservableEvent, String> dueDateColU = new TableColumn<>("Due date");
+
+        nameColU.setCellValueFactory(new PropertyValueFactory<>("name"));
+        dueDateColU.setCellValueFactory(new PropertyValueFactory<>("dueDate"));
+
+        nameCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.56));
+        dueDateCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.32));
+        markCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.16));
+
+        nameColU.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.56));
+        dueDateColU.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.32));
+
+        List<TableColumn<ObservableEvent, ?>> items = Arrays.asList(nameCol, dueDateCol, markCol, nameColU, dueDateColU);
+        items.forEach(item -> {
+            item.getStyleClass().add("text-col");
+            item.setResizable(false);
+        });
+
+        upcoming.getColumns().addAll(items.subList(3, 5));
+        past.getColumns().addAll(items.subList(0,3));
+
+        upcoming.setItems(logic.getCourseEvents(course.idProperty().get(), false));
+        past.setItems(logic.getCourseEvents(course.idProperty().get(), true));
+
+        dueDateCol.setSortType(TableColumn.SortType.DESCENDING);
+        dueDateColU.setSortType(TableColumn.SortType.ASCENDING);
+
+        grid.add(infoHeader, 0, 0);
+        grid.add(upcoming, 0, 1);
+        grid.add(past, 0, 2);
+
+        return root;
+    }
 
     StackPane getCourseOverviewContent(Scene sc, PresenterLogic logic) {
         StackPane root = new StackPane();
@@ -196,7 +270,7 @@ public class PresenterElements {
 
         TableColumn<ObservableCourse, String> nameCol = new TableColumn<>("Course name");
         TableColumn<ObservableCourse, Double> avgCol = new TableColumn<>("Average");
-        TableColumn<ObservableCourse, String> nextEventCol = new TableColumn<>("Next assignment");
+        TableColumn<ObservableCourse, String> nextEventCol = new TableColumn<>("Next event");
         TableColumn<ObservableCourse, Double> nextDueCol = new TableColumn<>("Due date");
 
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -290,7 +364,7 @@ public class PresenterElements {
         String[] marks = new String[7];
         Boolean[] recurrings = new Boolean[7];
 
-        JFXTextField field1 = getTextField(content, "Assignment name", 0.3, false);
+        JFXTextField field1 = getTextField(content, "Event name", 0.3, false);
         JFXTextField marks1 = getTextField(content, "Weight", 0.08, true);
         JFXToggleButton button1 = getToggleButton("Recurring?");
 
@@ -309,7 +383,7 @@ public class PresenterElements {
             if (items.get() < 7) {
                 int i = items.get();
 
-                JFXTextField nameField = getTextField(content, "Assignment name", 0.3, false);
+                JFXTextField nameField = getTextField(content, "Event name", 0.3, false);
                 nameField.textProperty().addListener((observable, oldValue, newValue) -> eventNames[i] = newValue);
                 JFXTextField markField = getTextField(content, "Weight", 0.08, true);
                 markField.textProperty().addListener((observable, oldValue, newValue) -> marks[i] = newValue);
@@ -436,6 +510,8 @@ public class PresenterElements {
         return dialog;
     }
 
+    // textfields and selectors
+
     /**
      * Returns a JFXTextField with labelFloat set to true and prompt text set to the input prompt text, with its width bound to the input Pane specified by the input bindRatio.
      * If numericFilter is set to true, a numeric filter is also set such that only numeric values can be entered.
@@ -516,18 +592,6 @@ public class PresenterElements {
         return time;
     }
 
-    JFXSnackbar.SnackbarEvent getSnackbarEvent(Pane root, String text, double hBindRatio, double vBindRatio) {
-        HBox content = new HBox();
-        content.prefWidthProperty().bind(root.widthProperty().multiply(hBindRatio));
-        content.prefHeightProperty().bind(root.heightProperty().multiply(vBindRatio));
-        content.setPadding(margin);
-        content.setAlignment(Pos.CENTER_LEFT);
-        content.getChildren().add(new Text(text));
-        content.setId("snackbar");
-
-        return new JFXSnackbar.SnackbarEvent(content, Duration.seconds(3.33), null);
-    }
-
     JFXComboBox<String> getComboBox(StackPane root, String promptText, double bindRatio) {
         JFXComboBox<String> combos = new JFXComboBox<>();
         combos.setFocusColor(focus);
@@ -549,6 +613,23 @@ public class PresenterElements {
         return button;
     }
 
+    // misc and text
+
+    Text getTextH2(String string, String color) {
+        Text text = new Text(string);
+        text.setFont(Font.font("Roboto Medium",15));
+        text.setFill(Paint.valueOf(color));
+        return text;
+    }
+
+    Text getTextNormal(String string, Paint color) {
+        Text text = new Text(string);
+        text.setFont(Font.font("Roboto Regular",12));
+        text.setFill(color);
+
+        return text;
+    }
+
     void setAnchorsCreate(Node layout, Node fab) {
         AnchorPane.setRightAnchor(layout, 0.0);
         AnchorPane.setLeftAnchor(layout, 0.0);
@@ -559,5 +640,17 @@ public class PresenterElements {
             AnchorPane.setRightAnchor(fab, 35.0);
             AnchorPane.setBottomAnchor(fab, 35.0);
         }
+    }
+
+    JFXSnackbar.SnackbarEvent getSnackbarEvent(Pane root, String text, double hBindRatio, double vBindRatio) {
+        HBox content = new HBox();
+        content.prefWidthProperty().bind(root.widthProperty().multiply(hBindRatio));
+        content.prefHeightProperty().bind(root.heightProperty().multiply(vBindRatio));
+        content.setPadding(margin);
+        content.setAlignment(Pos.CENTER_LEFT);
+        content.getChildren().add(new Text(text));
+        content.setId("snackbar");
+
+        return new JFXSnackbar.SnackbarEvent(content, Duration.seconds(3.33), null);
     }
 }

@@ -278,5 +278,22 @@ floating buttons
     -fx-background-radius: 3;
 }
 
+#content-header {
+    -fx-font-family: "Roboto Medium";
+    -fx-font-size: 15px;
+    -fx-fill: white;
+}
+
+#content-subheader {
+    -fx-font-family: "Roboto Regular";
+    -fx-font-size: 13px;
+    -fx-fill: white;
+}
+
+#content-supersize {
+    -fx-font-family: "Roboto Medium";
+    -fx-font-size: 20px;
+    -fx-fill: white;
+}
 
 

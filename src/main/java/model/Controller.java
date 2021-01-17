@@ -197,6 +197,10 @@ public class Controller {
         return events.getRecurrence(eventID);
     }
 
+    public List<String> getRecurringEventInstances(String recurringID) {
+        return events.getRecurringEventInstances(recurringID);
+    }
+
     public double getEventGrade(String eventID) {
         return events.getGrade(eventID);
     }

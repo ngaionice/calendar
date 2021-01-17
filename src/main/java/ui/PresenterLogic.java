@@ -51,29 +51,26 @@ public class PresenterLogic {
         return courses;
     }
 
-    boolean verifyAndAddCourse(String name, List<JFXTextField> fields, List<JFXTextField> marks, List<JFXDatePicker> dates, List<JFXTimePicker> times) {
-        double count = 0;
-        for (TextField field: marks) {
-            if (!field.getText().equals("") && !field.getText().equals(".")) {
-                count += Double.parseDouble(field.getText());
+    ObservableList<ObservableEvent> getCourseEvents(String courseID, boolean pastEvents) {
+        ObservableList<ObservableEvent> events = FXCollections.observableArrayList();
+        List<String> eventIDs = con.getOneTimeCourseEvents(courseID);
+        List<String> recurringIDs = con.getRecurringCourseEvents(courseID);
+        for (String recurringID: recurringIDs) {
+            eventIDs.addAll(con.getRecurringEventInstances(recurringID));
+        }
+        for (String eventID: eventIDs) {
+            if (pastEvents) {
+                if (LocalDateTime.now().isAfter(con.getEventDueDate(eventID))) {
+                    events.add(new ObservableEvent(con.getEventName(eventID), eventID, con.getEventDueDate(eventID), con.getEventGrade(eventID)));
+                }
+            } else {
+                if (LocalDateTime.now().isBefore(con.getEventDueDate(eventID))) {
+                    events.add(new ObservableEvent(con.getEventName(eventID), eventID, con.getEventDueDate(eventID), con.getEventGrade(eventID)));
+                }
             }
         }
-        if (Math.abs(count - 100) > 0.01) {
-            return false;
-        }
-        Map<String, Double> map = new HashMap<>(10);
-        String courseID = con.addCourse(name);
-        for (int i = 0; i < fields.size(); i++) {
-            String eventID = con.addEvent(fields.get(i).getText());
-            con.setEventDueDate(eventID, LocalDateTime.of(dates.get(i).getValue(), times.get(i).getValue()));
-            double mark = marks.get(i).getText().equals("") || marks.get(i).getText().equals(".") ? 0 : Double.parseDouble(marks.get(i).getText());
-            map.put(eventID, mark);
 
-            // TODO: account for recurring events
-            con.addEventToCourse(courseID, eventID, false);
-        }
-        con.setCourseBreakdown(courseID, map);
-        return true;
+        return events;
     }
 
     boolean verifyAndAddCourse(String courseName, String[] eventNames, String[] marks, Boolean[] recurrings, JFXDatePicker[] dates, JFXTimePicker[] times, JFXDatePicker[] skipDates, JFXTextField[] occurrences, JFXTextField[] offsets, int rows) {

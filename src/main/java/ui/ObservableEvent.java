@@ -1,5 +1,7 @@
 package ui;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
@@ -11,11 +13,13 @@ public class ObservableEvent {
     private final StringProperty name;
     private final StringProperty dueDate;
     private final StringProperty id;
+    private final DoubleProperty mark;
 
-    public ObservableEvent(String name, String id, LocalDateTime dueDate) {
+    public ObservableEvent(String name, String id, LocalDateTime dueDate, double mark) {
         this.name = new SimpleStringProperty(name);
         this.id = new SimpleStringProperty(id);
         this.dueDate = new SimpleStringProperty(dueDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+        this.mark = new SimpleDoubleProperty(mark);
     }
 
     public StringProperty nameProperty() {
@@ -28,5 +32,9 @@ public class ObservableEvent {
 
     public StringProperty dueDateProperty() {
         return dueDate;
+    }
+
+    public DoubleProperty markProperty() {
+        return mark;
     }
 }

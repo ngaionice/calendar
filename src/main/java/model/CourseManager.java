@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class CourseManager  {
 
-    private Map<String, Course> map;
+    private Map<String, Course> map = new HashMap<>(10);
 
     // setters
 
