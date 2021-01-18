@@ -2,6 +2,7 @@ package ui;
 
 import com.jfoenix.controls.*;
 import com.jfoenix.effects.JFXDepthManager;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -20,6 +21,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
@@ -82,7 +84,7 @@ public class PresenterElements {
         });
 
         mainButtons.get(2).setOnAction(event -> {
-            content.setCenter(getTabPane());
+            content.setCenter(getEventsPane(sc, logic));
             content.setTop(getHeader(sc, "Upcoming"));
         });
 
@@ -240,8 +242,8 @@ public class PresenterElements {
         upcoming.getColumns().addAll(items.subList(4, 7));
         past.getColumns().addAll(items.subList(0, 4));
 
-        upcoming.setItems(logic.getCourseEvents(course.idProperty().get(), false));
-        past.setItems(logic.getCourseEvents(course.idProperty().get(), true));
+        upcoming.setItems(logic.getCourseEvents(course.idProperty().get(), true));
+        past.setItems(logic.getCourseEvents(course.idProperty().get(), false));
 
         dueDateCol.setSortType(TableColumn.SortType.DESCENDING);
         dueDateColU.setSortType(TableColumn.SortType.ASCENDING);
@@ -291,9 +293,6 @@ public class PresenterElements {
 
         ObservableList<ObservableCourse> courseData = logic.getCourses(true);
 
-        courseData.add(new ObservableCourse("Test course 1", "TEST101", "test1", 89.0, "Lecture", LocalDateTime.now()));
-        courseData.add(new ObservableCourse("Test course 2", "TEST102", "test2", 80.0, "Assignment 1", LocalDateTime.of(2019, 10, 12, 10, 30)));
-
         table.getColumns().addAll(items);
         table.setItems(courseData);
 
@@ -317,6 +316,70 @@ public class PresenterElements {
         anchor.getChildren().add(table);
         anchor.getChildren().add(fab);
         root.getChildren().add(anchor);
+        return root;
+    }
+
+    JFXTabPane getEventsPane(Scene sc, PresenterLogic logic) {
+        JFXTabPane tabs = new JFXTabPane();
+        tabs.setTabMinWidth(104);
+        tabs.setTabMaxWidth(104);
+        tabs.setTabMinHeight(24);
+
+        addTab(tabs, "View", getEventOverviewContent(sc, logic, true));
+        return tabs;
+    }
+
+    StackPane getEventOverviewContent(Scene sc, PresenterLogic logic, boolean isUpcoming) {
+        StackPane root = new StackPane();
+        root.setPadding(largerMargin);
+
+        TableView<ObservableEvent> table = new TableView<>();
+
+        table.prefWidthProperty().bind(sc.widthProperty().multiply(0.8));
+        table.prefHeightProperty().bind(sc.heightProperty().multiply(0.8));
+        table.setFixedCellSize(48);
+        table.setPadding(mediumMargin);
+
+        TableColumn<ObservableEvent, String> codeCol = new TableColumn<>("Course code");
+        TableColumn<ObservableEvent, String> nameCol = new TableColumn<>("Event name");
+        TableColumn<ObservableEvent, Double> dueDateCol = new TableColumn<>("Due date");
+        TableColumn<ObservableEvent, Double> weightCol = new TableColumn<>("Weight");
+
+        codeCol.setCellValueFactory(new PropertyValueFactory<>("courseCode"));
+        nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+        dueDateCol.setCellValueFactory(new PropertyValueFactory<>("dueDate"));
+        weightCol.setCellValueFactory(new PropertyValueFactory<>("weight"));
+
+        codeCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
+        nameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.28));
+        dueDateCol.prefWidthProperty().bind(table.widthProperty().multiply(0.16));
+        weightCol.prefWidthProperty().bind(table.widthProperty().multiply(0.24));
+
+        List<TableColumn<ObservableEvent, ?>> items = Arrays.asList(codeCol, nameCol, dueDateCol, weightCol);
+        if (!isUpcoming) {
+            TableColumn<ObservableEvent, Double> markCol = new TableColumn<>("Mark");
+            markCol.setCellValueFactory(new PropertyValueFactory<>("mark"));
+            weightCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
+            markCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
+            items.add(markCol);
+        }
+        items.forEach(item -> {
+            item.getStyleClass().add("text-col");
+            item.setResizable(false);
+        });
+
+        ObservableList<ObservableEvent> events = FXCollections.observableArrayList();
+        Map<String, String> courseInfo = logic.getAllCourseInfo();
+        for (String courseID: courseInfo.keySet()) {
+            events.addAll(logic.getCourseEvents(courseID, isUpcoming));
+        }
+
+        table.getColumns().addAll(items);
+        table.setItems(events);
+
+        JFXDepthManager.setDepth(table, 1);
+
+        root.getChildren().add(table);
         return root;
     }
 
@@ -532,7 +595,7 @@ public class PresenterElements {
     /**
      * Returns a JFXTextField with labelFloat set to true and prompt text set to the input prompt text, with its width bound to the input Pane specified by the input bindRatio.
      * If numericFilter is set to true, a numeric filter is also set such that only numeric values can be entered.
-     * <p>
+     *
      * Note that the numeric filter is unable to catch input cases of ending with a . (period), so this edge case should be accounted for when using it as a field for numbers.
      *
      * @param root          the Pane to bind the JFXTextField's width to
@@ -548,12 +611,6 @@ public class PresenterElements {
         field.setLabelFloat(true);
         if (numericFilter) {
             field.setTextFormatter(new TextFormatter<>(getNumericFilter()));
-            field.textProperty().addListener(((observable, oldValue, newValue) -> {
-                // this does not catch inputs ending with .
-                if ((!newValue.equals("") && newValue.charAt(0) == '.') || newValue.contains(".") && (newValue.indexOf(".") != newValue.lastIndexOf("."))) {
-                    field.setText(oldValue);
-                }
-            }));
         }
         return field;
     }
@@ -567,16 +624,18 @@ public class PresenterElements {
         return input -> {
             if (input.isAdded()) {
                 String addedText = input.getText();
-                if (addedText.matches("[0-9.]")) {
+                String newText = input.getControlNewText();
+                System.out.println(newText);
+                if (newText.matches("\\d{1,3}[.]?(\\d{1,2})?")) {
                     return input;
                 }
 
                 int length = addedText.length();
-                addedText = addedText.replaceAll("[^0-9.]", "");
+                addedText = "";
                 input.setText(addedText);
 
                 // modify caret position if size of text changed:
-                int delta = addedText.length() - length;
+                int delta = -length;
                 input.setCaretPosition(input.getCaretPosition() + delta);
                 input.setAnchor(input.getAnchor() + delta);
             }

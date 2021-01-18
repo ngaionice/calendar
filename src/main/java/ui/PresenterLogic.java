@@ -55,7 +55,11 @@ public class PresenterLogic {
         return courses;
     }
 
-    ObservableList<ObservableEvent> getCourseEvents(String courseID, boolean pastEvents) {
+    Map<String, String> getAllCourseInfo() {
+        return con.getAllCourseInfo();
+    }
+
+    ObservableList<ObservableEvent> getCourseEvents(String courseID, boolean isUpcoming) {
         ObservableList<ObservableEvent> events = FXCollections.observableArrayList();
         List<String> eventIDs = con.getOneTimeCourseEvents(courseID);
         List<String> recurringIDs = con.getRecurringCourseEvents(courseID);
@@ -67,7 +71,7 @@ public class PresenterLogic {
         // TODO: figure out why one-time course events list gets mutated to contain duplicates eventually after reloading
         eventIDs = eventIDs.stream().distinct().collect(Collectors.toList());
         for (String eventID : eventIDs) {
-            if (pastEvents) {
+            if (!isUpcoming) {
                 if (LocalDateTime.now().isAfter(con.getEventDueDate(eventID))) {
                     events.add(new ObservableEvent(con.getEventName(eventID), eventID, courseCode, con.getEventDueDate(eventID), con.getEventGrade(eventID), con.getEventWeight(eventID)));
                 }
