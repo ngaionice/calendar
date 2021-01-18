@@ -18,7 +18,11 @@ import javafx.scene.text.Text;
 import javafx.util.Duration;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +78,7 @@ public class PresenterElements {
         spacer.prefHeightProperty().bind(sc.heightProperty().multiply(0.125));
 
         mainButtons.get(0).setOnAction(event -> {
-            content.setCenter(getTabPane());
+            content.setCenter(getCalendarPane(sc, logic));
             content.setTop(getHeader(sc, "Calendar"));
         });
 
@@ -89,7 +93,7 @@ public class PresenterElements {
         });
 
         mainButtons.get(3).setOnAction(event -> {
-            content.setCenter(getCoursesPane(sc, logic));
+            content.setCenter(getArchivePane(sc, logic));
             content.setTop(getHeader(sc, "Archive"));
         });
 
@@ -114,11 +118,7 @@ public class PresenterElements {
         tabs.setTabMinWidth(104);
         tabs.setTabMaxWidth(104);
 
-        addTab(tabs, "CSC263", new Label("Blank Calendar"));
-        addTab(tabs, "CSC343", new Label("Blank Courses"));
-        addTab(tabs, "STA305", new Label("Blank Events"));
-        addTab(tabs, "STA355", new Label("Blank Add Menu"));
-        addTab(tabs, "PCL201", new Label("Blank Settings"));
+        addTab(tabs, "N/A", new Label("Not implemented yet"));
 
         return tabs;
     }
@@ -319,70 +319,6 @@ public class PresenterElements {
         return root;
     }
 
-    JFXTabPane getEventsPane(Scene sc, PresenterLogic logic) {
-        JFXTabPane tabs = new JFXTabPane();
-        tabs.setTabMinWidth(104);
-        tabs.setTabMaxWidth(104);
-        tabs.setTabMinHeight(24);
-
-        addTab(tabs, "View", getEventOverviewContent(sc, logic, true));
-        return tabs;
-    }
-
-    StackPane getEventOverviewContent(Scene sc, PresenterLogic logic, boolean isUpcoming) {
-        StackPane root = new StackPane();
-        root.setPadding(largerMargin);
-
-        TableView<ObservableEvent> table = new TableView<>();
-
-        table.prefWidthProperty().bind(sc.widthProperty().multiply(0.8));
-        table.prefHeightProperty().bind(sc.heightProperty().multiply(0.8));
-        table.setFixedCellSize(48);
-        table.setPadding(mediumMargin);
-
-        TableColumn<ObservableEvent, String> codeCol = new TableColumn<>("Course code");
-        TableColumn<ObservableEvent, String> nameCol = new TableColumn<>("Event name");
-        TableColumn<ObservableEvent, Double> dueDateCol = new TableColumn<>("Due date");
-        TableColumn<ObservableEvent, Double> weightCol = new TableColumn<>("Weight");
-
-        codeCol.setCellValueFactory(new PropertyValueFactory<>("courseCode"));
-        nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
-        dueDateCol.setCellValueFactory(new PropertyValueFactory<>("dueDate"));
-        weightCol.setCellValueFactory(new PropertyValueFactory<>("weight"));
-
-        codeCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
-        nameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.28));
-        dueDateCol.prefWidthProperty().bind(table.widthProperty().multiply(0.16));
-        weightCol.prefWidthProperty().bind(table.widthProperty().multiply(0.24));
-
-        List<TableColumn<ObservableEvent, ?>> items = Arrays.asList(codeCol, nameCol, dueDateCol, weightCol);
-        if (!isUpcoming) {
-            TableColumn<ObservableEvent, Double> markCol = new TableColumn<>("Mark");
-            markCol.setCellValueFactory(new PropertyValueFactory<>("mark"));
-            weightCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
-            markCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
-            items.add(markCol);
-        }
-        items.forEach(item -> {
-            item.getStyleClass().add("text-col");
-            item.setResizable(false);
-        });
-
-        ObservableList<ObservableEvent> events = FXCollections.observableArrayList();
-        Map<String, String> courseInfo = logic.getAllCourseInfo();
-        for (String courseID: courseInfo.keySet()) {
-            events.addAll(logic.getCourseEvents(courseID, isUpcoming));
-        }
-
-        table.getColumns().addAll(items);
-        table.setItems(events);
-
-        JFXDepthManager.setDepth(table, 1);
-
-        root.getChildren().add(table);
-        return root;
-    }
-
     JFXDialog getCourseCreateDialog(StackPane root, double hBindRatio, double vBindRatio) {
         JFXDialogLayout layout = new JFXDialogLayout();
         JFXDialog dialog = new JFXDialog(root, layout, JFXDialog.DialogTransition.CENTER);
@@ -505,12 +441,12 @@ public class PresenterElements {
         });
         Arrays.asList(backButtons.get(1), nextButtons.get(0)).forEach(item ->
                 item.setOnAction(event -> {
-            content.getChildren().clear();
-            content.getChildren().add(events);
+                    content.getChildren().clear();
+                    content.getChildren().add(events);
 
-            actions.getChildren().clear();
-            actions.getChildren().addAll(Arrays.asList(backButtons.get(0), nextButtons.get(1)));
-        }));
+                    actions.getChildren().clear();
+                    actions.getChildren().addAll(Arrays.asList(backButtons.get(0), nextButtons.get(1)));
+                }));
 
         nextButtons.get(1).setOnAction(event -> {
             content.getChildren().clear();
@@ -588,6 +524,123 @@ public class PresenterElements {
         actions.getChildren().add(nextButtons.get(0));
 
         return dialog;
+    }
+
+    JFXTabPane getEventsPane(Scene sc, PresenterLogic logic) {
+        JFXTabPane tabs = new JFXTabPane();
+        tabs.setTabMinWidth(104);
+        tabs.setTabMaxWidth(104);
+        tabs.setTabMinHeight(24);
+
+        addTab(tabs, "View", getEventOverviewContent(sc, logic, true));
+        return tabs;
+    }
+
+    StackPane getEventOverviewContent(Scene sc, PresenterLogic logic, boolean isUpcoming) {
+        StackPane root = new StackPane();
+        root.setPadding(largerMargin);
+
+        TableView<ObservableEvent> table = new TableView<>();
+
+        table.prefWidthProperty().bind(sc.widthProperty().multiply(0.8));
+        table.prefHeightProperty().bind(sc.heightProperty().multiply(0.8));
+        table.setFixedCellSize(48);
+        table.setPadding(mediumMargin);
+
+        TableColumn<ObservableEvent, String> codeCol = new TableColumn<>("Course code");
+        TableColumn<ObservableEvent, String> nameCol = new TableColumn<>("Event name");
+        TableColumn<ObservableEvent, Double> dueDateCol = new TableColumn<>("Due date");
+        TableColumn<ObservableEvent, Double> weightCol = new TableColumn<>("Weight");
+
+        codeCol.setCellValueFactory(new PropertyValueFactory<>("courseCode"));
+        nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
+        dueDateCol.setCellValueFactory(new PropertyValueFactory<>("dueDate"));
+        weightCol.setCellValueFactory(new PropertyValueFactory<>("weight"));
+
+        codeCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
+        nameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.28));
+        dueDateCol.prefWidthProperty().bind(table.widthProperty().multiply(0.16));
+        weightCol.prefWidthProperty().bind(table.widthProperty().multiply(0.24));
+
+        List<TableColumn<ObservableEvent, ?>> items = new ArrayList<>(Arrays.asList(codeCol, nameCol, dueDateCol, weightCol));
+        if (!isUpcoming) {
+            TableColumn<ObservableEvent, Double> markCol = new TableColumn<>("Mark");
+            markCol.setCellValueFactory(new PropertyValueFactory<>("mark"));
+            weightCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
+            markCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
+            items.add(markCol);
+        }
+        items.forEach(item -> {
+            item.getStyleClass().add("text-col");
+            item.setResizable(false);
+        });
+
+        ObservableList<ObservableEvent> events = FXCollections.observableArrayList();
+        Map<String, String> courseInfo = logic.getAllCourseInfo();
+        for (String courseID: courseInfo.keySet()) {
+            events.addAll(logic.getCourseEvents(courseID, isUpcoming));
+        }
+
+        table.getColumns().addAll(items);
+        table.setItems(events);
+
+        JFXDepthManager.setDepth(table, 1);
+
+        root.getChildren().add(table);
+        return root;
+    }
+
+    JFXTabPane getArchivePane(Scene sc, PresenterLogic logic) {
+        JFXTabPane tabs = new JFXTabPane();
+        tabs.setTabMinWidth(104);
+        tabs.setTabMaxWidth(104);
+        tabs.setTabMinHeight(24);
+
+        addTab(tabs, "Events", getEventOverviewContent(sc, logic, false));
+        addTab(tabs, "Courses", new Label("Not implemented yet."));
+        return tabs;
+    }
+
+    JFXTabPane getCalendarPane(Scene sc, PresenterLogic logic) {
+        JFXTabPane tabs = new JFXTabPane();
+        tabs.setTabMinWidth(104);
+        tabs.setTabMaxWidth(104);
+        tabs.setTabMinHeight(24);
+
+        addTab(tabs, "Month", getCalendarMonthContent(sc, logic));
+        addTab(tabs, "Week", new Label("Not implemented yet."));
+        return tabs;
+    }
+
+    StackPane getCalendarMonthContent(Scene sc, PresenterLogic logic) {
+        StackPane root = new StackPane();
+        root.setPadding(largerMargin);
+
+        GridPane grid = new GridPane();
+        grid.setPadding(mediumMargin);
+        grid.setBackground(testBackground);
+        grid.setHgap(12);
+        grid.setVgap(12);
+        grid.setGridLinesVisible(true);
+        grid.setAlignment(Pos.CENTER);
+
+        LocalDate today = LocalDateTime.now().toLocalDate();
+//        LocalDate start = today.minusDays(today.getDayOfWeek().getValue() % 7);
+        Month month = today.getMonth();
+        LocalDate firstDay = LocalDate.now().with(TemporalAdjusters.firstDayOfMonth());
+        LocalDate lastDay = LocalDate.now().with(TemporalAdjusters.lastDayOfMonth());
+
+        Map<Integer, ObservableList<ObservableEvent>> events = logic.getEventsOfMonth();
+
+        for (Map.Entry<Integer, ObservableList<ObservableEvent>> entry: events.entrySet()) {
+            // create an
+        }
+
+
+        JFXDepthManager.setDepth(grid, 1);
+        root.getChildren().add(grid);
+
+        return root;
     }
 
     // textfields and selectors

@@ -11,9 +11,9 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.time.Month;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PresenterLogic {
@@ -157,5 +157,41 @@ public class PresenterLogic {
             }
         }
         return true;
+    }
+
+    /**
+     * Returns a map of lists of ObservableEvents occurring in the current month.
+     * Key: day of month;
+     * Value: ObservableList of ObservableEvent
+     *
+     * @return a map of ObservableList of ObservableEvents mapped by day of month
+     */
+    Map<Integer, ObservableList<ObservableEvent>> getEventsOfMonth() {
+        Map<Integer, ObservableList<ObservableEvent>> eventsMap = new HashMap<>(31);
+
+        Month month = LocalDateTime.now().getMonth();
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        // get all the events
+        ObservableList<ObservableEvent> events = FXCollections.observableArrayList();
+        Map<String, String> courseInfo = getAllCourseInfo();
+        for (String courseID: courseInfo.keySet()) {
+            events.addAll(getCourseEvents(courseID, true));
+            events.addAll(getCourseEvents(courseID, false));
+        }
+
+        // sort each event by date, extracting only the events in the same month
+        for (ObservableEvent event: events) {
+            LocalDateTime dueDate = LocalDateTime.parse(event.dueDateProperty().get(), df);
+            if (dueDate.getMonth().getValue() == month.getValue()) {
+                if (!eventsMap.containsKey(dueDate.getDayOfMonth())) {
+                    eventsMap.put(dueDate.getDayOfMonth(), FXCollections.observableArrayList(event));
+                } else {
+                    eventsMap.get(dueDate.getDayOfMonth()).add(event);
+                }
+            }
+        }
+
+        return eventsMap;
     }
 }

@@ -26,15 +26,14 @@ public class Presenter {
         BorderPane content = new BorderPane();
         VBox nav = elements.getNav(sc, content);
 
-        content.setTop(elements.getHeader(sc, "Courses"));
-        content.setCenter(elements.getTabPane());
+        content.setTop(elements.getHeader(sc, "Upcoming"));
+        content.setCenter(elements.getEventsPane(sc, logic));
 
         root.setLeft(nav);
         root.setCenter(content);
 
         return root;
     }
-
 
 
 }
