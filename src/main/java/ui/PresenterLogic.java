@@ -3,16 +3,18 @@ package ui;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextField;
 import com.jfoenix.controls.JFXTimePicker;
-import com.jfoenix.controls.JFXToggleButton;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
 import model.Controller;
-import model.Course;
 
+import java.text.DecimalFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class PresenterLogic {
 
@@ -26,21 +28,23 @@ public class PresenterLogic {
         ObservableList<ObservableCourse> courses = FXCollections.observableArrayList();
         Map<String, String> courseInfo = con.getAllCourseInfo();
 
-        for (String id: courseInfo.keySet()) {
+        for (String id : courseInfo.keySet()) {
             String code = courseInfo.get(id);
 
             List<String> eventIDs = new ArrayList<>();
             String earliestEvent = "N/A";
             LocalDateTime earliestDue = LocalDateTime.of(2999, 10, 10, 10, 30);
             if (includeRecurring) {
-                eventIDs.addAll(con.getRecurringCourseEvents(id));
+                for (String recurringID : con.getRecurringCourseEvents(id)) {
+                    eventIDs.addAll(con.getRecurringEventInstances(recurringID));
+                }
             }
             eventIDs.addAll(con.getOneTimeCourseEvents(id));
 
             // find the earliest event
-            for (String eventID: eventIDs) {
+            for (String eventID : eventIDs) {
                 LocalDateTime thisDueDate = con.getEventDueDate(eventID);
-                if (thisDueDate != null && thisDueDate.isBefore(earliestDue)) {
+                if (thisDueDate != null && thisDueDate.isBefore(earliestDue) && thisDueDate.isAfter(LocalDateTime.now())) {
                     earliestDue = thisDueDate;
                     earliestEvent = con.getEventName(eventID);
                 }
@@ -55,68 +59,99 @@ public class PresenterLogic {
         ObservableList<ObservableEvent> events = FXCollections.observableArrayList();
         List<String> eventIDs = con.getOneTimeCourseEvents(courseID);
         List<String> recurringIDs = con.getRecurringCourseEvents(courseID);
-        for (String recurringID: recurringIDs) {
+        String courseCode = con.getCourseCode(courseID);
+        for (String recurringID : recurringIDs) {
             eventIDs.addAll(con.getRecurringEventInstances(recurringID));
         }
-        for (String eventID: eventIDs) {
+
+        // TODO: figure out why one-time course events list gets mutated to contain duplicates eventually after reloading
+        eventIDs = eventIDs.stream().distinct().collect(Collectors.toList());
+        for (String eventID : eventIDs) {
             if (pastEvents) {
                 if (LocalDateTime.now().isAfter(con.getEventDueDate(eventID))) {
-                    events.add(new ObservableEvent(con.getEventName(eventID), eventID, con.getEventDueDate(eventID), con.getEventGrade(eventID), con.getEventWeight(eventID)));
+                    events.add(new ObservableEvent(con.getEventName(eventID), eventID, courseCode, con.getEventDueDate(eventID), con.getEventGrade(eventID), con.getEventWeight(eventID)));
                 }
             } else {
                 if (LocalDateTime.now().isBefore(con.getEventDueDate(eventID))) {
-                    events.add(new ObservableEvent(con.getEventName(eventID), eventID, con.getEventDueDate(eventID), con.getEventGrade(eventID), con.getEventWeight(eventID)));
+                    events.add(new ObservableEvent(con.getEventName(eventID), eventID, courseCode, con.getEventDueDate(eventID), con.getEventGrade(eventID), con.getEventWeight(eventID)));
                 }
             }
         }
-
         return events;
     }
 
-    boolean verifyAndAddCourse(String courseName, String[] eventNames, String[] marks, Boolean[] recurrings, JFXDatePicker[] dates, JFXTimePicker[] times, JFXDatePicker[] skipDates, JFXTextField[] occurrences, JFXTextField[] offsets, int rows) {
-        List<Double> marksNumeric = new ArrayList<>();
-        for (String mark : marks) {
-            if (mark != null) {
+    boolean verifyAndAddCourse(String courseName, String courseCode, String[] eventNames, String[] marks, Boolean[] recurrings, JFXDatePicker[] dates,
+                               JFXTimePicker[] times, JFXDatePicker[] skipDates, JFXTextField[] occurrences, JFXTextField[] offsets, int rows) {
+        String courseID = con.addCourse(courseName);
+        con.setCourseCode(courseID, courseCode);
+        System.out.println("Processing courses");
+        // create the events and add them into the course
+        for (int i = 0; i < rows - 1; i++) {
+
+            // check if this course is empty (i.e. the user pressed the add button too many times)
+            String name = eventNames[i];
+            if (name == null || name.trim().equals("")) {
+                continue;
+            }
+
+            // get event weighting in course
+            double weight;
+            try {
+                weight = Double.parseDouble(marks[i]);
+            } catch (NumberFormatException | NullPointerException e) {
+                weight = 0;
+            }
+
+            // get due date
+            LocalDateTime dueDate;
+            LocalDate date = dates[i].getValue();
+            LocalTime time = times[i].getValue();
+
+            try {
+                dueDate = LocalDateTime.of(date, time);
+            } catch (NullPointerException e) {
+                if (date != null) {
+                    dueDate = LocalDateTime.of(date, LocalTime.of(0, 0));
+                } else if (time != null){
+                    dueDate = LocalDateTime.of(LocalDate.of(2099, 12, 31), time);
+                } else {
+                    dueDate = LocalDateTime.of(2099, 12, 31, 23, 59);
+                }
+            }
+
+            // recurring event
+            if (recurrings[i] != null && recurrings[i]) {
+                int occurrence;
+                int offset;
+                LocalDate skip = skipDates[i].getValue() != null ? skipDates[i].getValue() : LocalDate.of(2099, 12, 31);
                 try {
-                    marksNumeric.add(Double.parseDouble(mark));
+                    occurrence = Integer.parseInt(occurrences[i].getText());
+                    if (occurrence == 0) {
+                        occurrence = 1;
+                    }
                 } catch (NumberFormatException e) {
+                    con.removeCourse(courseID);
                     return false;
                 }
-            }
-        }
-        if (Math.abs(marksNumeric.stream().mapToDouble(f -> f).sum() - 100) <= 0.1) {
-            String courseID = con.addCourse(courseName);
-            List<String> events = new ArrayList<>();
-
-            // create the events and add them into the course
-            for (int i = 1; i < rows; i++) {
-                String name = eventNames[i - 1];
-                LocalDateTime dueDate = null;
-                if (dates[i - 1].getValue() != null && times[i - 1].getValue() != null) {
-                    dueDate = LocalDateTime.of(dates[i - 1].getValue(), times[i - 1].getValue());
+                try {
+                    offset = Integer.parseInt(offsets[i].getText());
+                } catch (NumberFormatException e) {
+                    offset = 1;
                 }
-                if (recurrings[i - 1] != null && recurrings[i - 1]) {
-                    int occurrence;
-                    int offset;
-                    try {
-                        occurrence = Integer.parseInt(occurrences[i - 1].getText());
-                        offset = Integer.parseInt(offsets[i - 1].getText());
-                    } catch (NumberFormatException e) {
-                        return false;
-                    }
-                    String recurringID = con.addRecurringEvent(name, occurrence, offset, dueDate, skipDates[i - 1].getValue());
-                    events.add(recurringID);
-                    con.addEventToCourse(courseID, recurringID, true);
-                } else {
-                    String eventID = con.addEvent(name);
-                    events.add(eventID);
-                    con.setEventDueDate(eventID, dueDate);
-                    con.addEventToCourse(courseID, eventID, false);
-                }
+                double itemWeight = (double) Math.round((weight/occurrence) * 100) / 100;
+                String recurringID = con.addRecurringEvent(name, offset, occurrence, dueDate, skip);
+                con.addEventToCourse(courseID, recurringID, true);
+                con.getRecurringEventInstances(recurringID).forEach(item -> con.setEventWeight(item, itemWeight));
             }
 
-            return true;
+            // one-time event
+            else {
+                String eventID = con.addEvent(name);
+                con.setEventDueDate(eventID, dueDate);
+                con.addEventToCourse(courseID, eventID, false);
+                con.setEventWeight(eventID, weight);
+            }
         }
-        return false;
+        return true;
     }
 }

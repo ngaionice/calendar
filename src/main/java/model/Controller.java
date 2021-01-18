@@ -92,6 +92,10 @@ public class Controller {
         return events.setGrade(eventID, grade);
     }
 
+    public boolean setEventWeight(String eventID, double grade) {
+        return events.setWeight(eventID, grade);
+    }
+
     public void addEventNotes(String eventID, String notes) {
         events.addNotes(eventID, notes);
     }

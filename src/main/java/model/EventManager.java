@@ -40,7 +40,7 @@ public class EventManager {
         recurringMap.put(recurringID, name);
         LocalDate currDate = startDate.toLocalDate();
         LocalTime dueTime = startDate.toLocalTime();
-        for (int i = suffixStart; i <= occurrences + suffixStart; i++) {
+        for (int i = suffixStart; i < occurrences + suffixStart; i++) {
             if (currDate != skipDate) {
                 String eventID = addEvent(name + " " + i);
                 setDueDate(eventID, LocalDateTime.of(currDate, dueTime));

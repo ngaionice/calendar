@@ -243,15 +243,21 @@ floating buttons
     -fx-pref-height: 120.0;
 }
 
-#save {
+#raised-button {
     -fx-background-color: #FF9800;
     -fx-alignment: CENTER;
     -fx-pref-height: 32;
     -fx-pref-width: 56;
     -fx-background-radius: 3;
+    -fx-font-family: "Roboto Medium";
 }
 
-#save {
+#flat-button {
+    -fx-text-fill: white;
+    -fx-alignment: CENTER;
+    -fx-pref-height: 32;
+    -fx-pref-width: 56;
+    -fx-background-radius: 3;
     -fx-font-family: "Roboto Medium";
 }
 

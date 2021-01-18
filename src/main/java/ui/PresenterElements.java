@@ -10,7 +10,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
-
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
@@ -19,7 +18,8 @@ import javafx.util.Duration;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
@@ -29,8 +29,8 @@ public class PresenterElements {
     PresenterLogic logic;
 
     Background testBackground = new Background(new BackgroundFill(Color.rgb(27, 27, 27), CornerRadii.EMPTY, Insets.EMPTY));
-    Background accentBackground =  new Background(new BackgroundFill(Color.rgb(255, 152, 0), CornerRadii.EMPTY, Insets.EMPTY));
-    Background accentButtonBackground =  new Background(new BackgroundFill(Color.rgb(255, 152, 0), new CornerRadii(3), Insets.EMPTY));
+    Background accentBackground = new Background(new BackgroundFill(Color.rgb(255, 152, 0), CornerRadii.EMPTY, Insets.EMPTY));
+    Background accentButtonBackground = new Background(new BackgroundFill(Color.rgb(255, 152, 0), new CornerRadii(3), Insets.EMPTY));
     Background whiteLightBackground = new Background(new BackgroundFill(Color.rgb(238, 238, 238), new CornerRadii(3), Insets.EMPTY));
 
     Insets margin = new Insets(8);
@@ -151,7 +151,7 @@ public class PresenterElements {
 
         ObservableList<ObservableCourse> courses = logic.getCourses(true);
 
-        for (ObservableCourse course: courses) {
+        for (ObservableCourse course : courses) {
             String code = course.codeProperty().get();
             addTab(tabs, code, getCourseContent(sc, course, logic));
         }
@@ -204,35 +204,41 @@ public class PresenterElements {
         past.prefHeightProperty().bind(sc.heightProperty().multiply(0.3));
         past.setFixedCellSize(48);
 
+        TableColumn<ObservableEvent, String> nameColU = new TableColumn<>("Upcoming events");
+        TableColumn<ObservableEvent, String> dueDateColU = new TableColumn<>("Due date");
+        TableColumn<ObservableEvent, Double> weightColU = new TableColumn<>("Weight");
+
         TableColumn<ObservableEvent, String> nameCol = new TableColumn<>("Past events");
         TableColumn<ObservableEvent, String> dueDateCol = new TableColumn<>("Due date");
         TableColumn<ObservableEvent, Double> markCol = new TableColumn<>("Mark");
+        TableColumn<ObservableEvent, Double> weightCol = new TableColumn<>("Weight");
 
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
         dueDateCol.setCellValueFactory(new PropertyValueFactory<>("dueDate"));
         markCol.setCellValueFactory(new PropertyValueFactory<>("mark"));
-
-        TableColumn<ObservableEvent, String> nameColU = new TableColumn<>("Upcoming events");
-        TableColumn<ObservableEvent, String> dueDateColU = new TableColumn<>("Due date");
+        weightCol.setCellValueFactory(new PropertyValueFactory<>("weight"));
 
         nameColU.setCellValueFactory(new PropertyValueFactory<>("name"));
         dueDateColU.setCellValueFactory(new PropertyValueFactory<>("dueDate"));
+        weightColU.setCellValueFactory(new PropertyValueFactory<>("weight"));
 
         nameCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.56));
-        dueDateCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.32));
-        markCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.16));
+        dueDateCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.24));
+        weightCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.12));
+        markCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.04));
 
         nameColU.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.56));
-        dueDateColU.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.32));
+        dueDateColU.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.24));
+        weightColU.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.16));
 
-        List<TableColumn<ObservableEvent, ?>> items = Arrays.asList(nameCol, dueDateCol, markCol, nameColU, dueDateColU);
+        List<TableColumn<ObservableEvent, ?>> items = Arrays.asList(nameCol, dueDateCol, weightCol, markCol, nameColU, dueDateColU, weightColU);
         items.forEach(item -> {
             item.getStyleClass().add("text-col");
             item.setResizable(false);
         });
 
-        upcoming.getColumns().addAll(items.subList(3, 5));
-        past.getColumns().addAll(items.subList(0,3));
+        upcoming.getColumns().addAll(items.subList(4, 7));
+        past.getColumns().addAll(items.subList(0, 4));
 
         upcoming.setItems(logic.getCourseEvents(course.idProperty().get(), false));
         past.setItems(logic.getCourseEvents(course.idProperty().get(), true));
@@ -285,8 +291,8 @@ public class PresenterElements {
 
         ObservableList<ObservableCourse> courseData = logic.getCourses(true);
 
-        courseData.add(new ObservableCourse("Test course 1", "TEST101","test1",89.0, "Lecture", LocalDateTime.now()));
-        courseData.add(new ObservableCourse("Test course 2", "TEST102","test2",80.0, "Assignment 1", LocalDateTime.of(2019, 10, 12, 10, 30)));
+        courseData.add(new ObservableCourse("Test course 1", "TEST101", "test1", 89.0, "Lecture", LocalDateTime.now()));
+        courseData.add(new ObservableCourse("Test course 2", "TEST102", "test2", 80.0, "Assignment 1", LocalDateTime.of(2019, 10, 12, 10, 30)));
 
         table.getColumns().addAll(items);
         table.setItems(courseData);
@@ -319,33 +325,34 @@ public class PresenterElements {
         JFXDialog dialog = new JFXDialog(root, layout, JFXDialog.DialogTransition.CENTER);
         layout.setId("dialog");
 
-        BorderPane pane = new BorderPane();
         StackPane content = new StackPane();
-        content.prefWidthProperty().bind(pane.widthProperty());
         content.setPadding(mediumMargin);
 
         AtomicReference<String> courseName = new AtomicReference<>("");
+        AtomicReference<String> courseCode = new AtomicReference<>("");
 
-        VBox nav = new VBox();
-        nav.setPadding(margin);
-        nav.prefWidthProperty().bind(pane.widthProperty().multiply(0.1));
-
-        List<JFXButton> navButtons = Arrays.asList(new JFXButton("Step 1"), new JFXButton("Step 2"), new JFXButton("Step 3"));
-        navButtons.forEach(item -> {
-            item.setId("add-nav-button");
-            item.setMaxWidth(Double.MAX_VALUE);
-        });
-        nav.getChildren().addAll(navButtons);
+        List<JFXButton> nextButtons = Arrays.asList(new JFXButton("NEXT"), new JFXButton("NEXT"), new JFXButton("SAVE"));
+        List<JFXButton> backButtons = Arrays.asList(new JFXButton("BACK"), new JFXButton("BACK"));
+        nextButtons.forEach(item -> item.setId("raised-button"));
+        backButtons.forEach(item -> item.setId("flat-button"));
 
         // step 1
-        JFXTextField courseNameField = getTextField(pane, "Course name", 0.16, false);
-        courseNameField.maxWidthProperty().bind(pane.widthProperty().multiply(0.32));
+        VBox step1 = new VBox(24);
+        step1.setAlignment(Pos.CENTER);
+
+        JFXTextField courseCodeField = getTextField(content, "Course code", 0.16, false);
+        JFXTextField courseNameField = getTextField(content, "Course name", 0.16, false);
+        courseNameField.maxWidthProperty().bind(content.widthProperty().multiply(0.32));
+        courseCodeField.maxWidthProperty().bind(content.widthProperty().multiply(0.32));
         courseNameField.textProperty().addListener((observable, oldValue, newValue) -> courseName.set(newValue));
+        courseCodeField.textProperty().addListener((observable, oldValue, newValue) -> courseCode.set(newValue));
+
+        step1.getChildren().addAll(Arrays.asList(courseCodeField, courseNameField));
 
         // step 2
         GridPane events = new GridPane();
         events.getRowConstraints().add(new RowConstraints(52));
-        Text eventHeaderText = new Text("Marks breakdown");
+        Text eventHeaderText = new Text("Set course events");
         eventHeaderText.setId("dialog-subheader");
         JFXButton addEvent = new JFXButton();
         AtomicInteger items = new AtomicInteger(1);
@@ -404,10 +411,12 @@ public class PresenterElements {
         GridPane grid3 = new GridPane();
 
         HBox step3Header = new HBox(12);
+        step3Header.setAlignment(Pos.CENTER_LEFT);
+
         Text step3HeaderText = new Text("Set due dates");
         step3HeaderText.setId("dialog-subheader");
+
         step3Header.getChildren().add(step3HeaderText);
-        step3Header.setAlignment(Pos.CENTER_LEFT);
         step3Header.prefHeightProperty().bind(eventsHeader.heightProperty());
         step3Header.prefWidthProperty().bind(grid3.widthProperty().multiply(0.64));
 
@@ -417,16 +426,30 @@ public class PresenterElements {
         JFXTextField[] occurrences = new JFXTextField[7];
         JFXTextField[] offsets = new JFXTextField[7];
 
+        JFXSnackbar confirmation = new JFXSnackbar(root);
+        JFXSnackbar failure = new JFXSnackbar(content);
+
+        HBox actions = new HBox(12);
+        actions.setPadding(margin);
+
         // nav buttons config
-        navButtons.get(0).setOnAction(event -> {
+        backButtons.get(0).setOnAction(event -> {
             content.getChildren().clear();
-            content.getChildren().add(courseNameField);
+            content.getChildren().add(step1);
+
+            actions.getChildren().clear();
+            actions.getChildren().add(nextButtons.get(0));
         });
-        navButtons.get(1).setOnAction(event -> {
+        Arrays.asList(backButtons.get(1), nextButtons.get(0)).forEach(item ->
+                item.setOnAction(event -> {
             content.getChildren().clear();
             content.getChildren().add(events);
-        });
-        navButtons.get(2).setOnAction(event -> {
+
+            actions.getChildren().clear();
+            actions.getChildren().addAll(Arrays.asList(backButtons.get(0), nextButtons.get(1)));
+        }));
+
+        nextButtons.get(1).setOnAction(event -> {
             content.getChildren().clear();
             content.getChildren().add(grid3);
 
@@ -460,18 +483,13 @@ public class PresenterElements {
                 grid3.add(box, 0, i + 1);
                 grid3.getRowConstraints().add(new RowConstraints(48));
             }
+
+            actions.getChildren().clear();
+            actions.getChildren().addAll(Arrays.asList(backButtons.get(1), nextButtons.get(2)));
         });
-
-        HBox saveBox = new HBox();
-        saveBox.setPadding(margin);
-        JFXButton save = new JFXButton("SAVE");
-        save.setId("save");
-
-        JFXSnackbar confirmation = new JFXSnackbar(root);
-        JFXSnackbar failure = new JFXSnackbar(content);
-
-        save.setOnAction(event -> {
-            boolean saved = logic.verifyAndAddCourse(courseName.get(), eventNames, marks, recurrings, dates, times, skipDates, occurrences, offsets, grid3.getRowConstraints().size());
+        nextButtons.get(2).setOnAction(event -> {
+            boolean saved = logic.verifyAndAddCourse(courseName.get(), courseCode.get(), eventNames, marks, recurrings,
+                    dates, times, skipDates, occurrences, offsets, grid3.getRowConstraints().size());
             if (saved) {
                 dialog.close();
                 root.getChildren().remove(dialog);
@@ -481,7 +499,7 @@ public class PresenterElements {
                 failure.enqueue(getSnackbarEvent(content, "Invalid data, please try again", 0.64, 0.12));
             }
         });
-        saveBox.getChildren().add(save);
+
 
         Text header = new Text("Add course");
         header.setId("dialog-header");
@@ -492,15 +510,19 @@ public class PresenterElements {
         eventHeaderText.setFill(Paint.valueOf("#FFF"));
         eventsHeader.setAlignment(Pos.CENTER_LEFT);
 
-        pane.setLeft(nav);
-        pane.setCenter(content);
-
         layout.setHeading(header);
-        layout.setBody(pane);
-        layout.setActions(saveBox);
+        layout.setBody(content);
+        layout.setActions(actions);
 
         layout.prefWidthProperty().bind(root.widthProperty().multiply(hBindRatio));
         layout.prefHeightProperty().bind(root.heightProperty().multiply(vBindRatio));
+
+        // set up start part
+        content.getChildren().clear();
+        content.getChildren().add(step1);
+
+        actions.getChildren().clear();
+        actions.getChildren().add(nextButtons.get(0));
 
         return dialog;
     }
@@ -510,12 +532,12 @@ public class PresenterElements {
     /**
      * Returns a JFXTextField with labelFloat set to true and prompt text set to the input prompt text, with its width bound to the input Pane specified by the input bindRatio.
      * If numericFilter is set to true, a numeric filter is also set such that only numeric values can be entered.
-     *
+     * <p>
      * Note that the numeric filter is unable to catch input cases of ending with a . (period), so this edge case should be accounted for when using it as a field for numbers.
      *
-     * @param root the Pane to bind the JFXTextField's width to
-     * @param promptText prompt text for the JFXTextField
-     * @param bindRatio the relative ratio of the width of the JFXTextField relative to the pane
+     * @param root          the Pane to bind the JFXTextField's width to
+     * @param promptText    prompt text for the JFXTextField
+     * @param bindRatio     the relative ratio of the width of the JFXTextField relative to the pane
      * @param numericFilter whether a numeric filter should be set to this JFXTextField
      * @return a JFXTextField
      */
@@ -554,7 +576,7 @@ public class PresenterElements {
                 input.setText(addedText);
 
                 // modify caret position if size of text changed:
-                int delta = addedText.length() - length ;
+                int delta = addedText.length() - length;
                 input.setCaretPosition(input.getCaretPosition() + delta);
                 input.setAnchor(input.getAnchor() + delta);
             }
@@ -612,14 +634,14 @@ public class PresenterElements {
 
     Text getTextH2(String string, String color) {
         Text text = new Text(string);
-        text.setFont(Font.font("Roboto Medium",15));
+        text.setFont(Font.font("Roboto Medium", 15));
         text.setFill(Paint.valueOf(color));
         return text;
     }
 
     Text getTextNormal(String string, Paint color) {
         Text text = new Text(string);
-        text.setFont(Font.font("Roboto Regular",12));
+        text.setFont(Font.font("Roboto Regular", 12));
         text.setFill(color);
 
         return text;
