@@ -21,6 +21,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.time.temporal.IsoFields;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -577,7 +578,7 @@ public class PresenterElements {
 
         ObservableList<ObservableEvent> events = FXCollections.observableArrayList();
         Map<String, String> courseInfo = logic.getAllCourseInfo();
-        for (String courseID: courseInfo.keySet()) {
+        for (String courseID : courseInfo.keySet()) {
             events.addAll(logic.getCourseEvents(courseID, isUpcoming));
         }
 
@@ -630,11 +631,44 @@ public class PresenterElements {
         LocalDate firstDay = LocalDate.now().with(TemporalAdjusters.firstDayOfMonth());
         LocalDate lastDay = LocalDate.now().with(TemporalAdjusters.lastDayOfMonth());
 
-        Map<Integer, ObservableList<ObservableEvent>> events = logic.getEventsOfMonth();
+        int firstWeek = firstDay.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+        int lastWeek = lastDay.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+        int rowNumber = lastWeek - firstWeek + 1;
 
-        for (Map.Entry<Integer, ObservableList<ObservableEvent>> entry: events.entrySet()) {
-            // create an
+        int gridColumnNumber = firstDay.getDayOfWeek().getValue() == 7 ? 0 : firstDay.getDayOfWeek().getValue();
+        int gridRowNumber = 0;
+
+        assert (rowNumber > 0) : "Row number <= 0.";
+
+        Map<Integer, ObservableList<ObservableEvent>> events = logic.getEventsOfMonth();
+        VBox[] containers = new VBox[32];
+
+        for (int i = 1; i <= lastDay.getDayOfMonth(); i++) {
+
+            VBox container = new VBox();
+            container.setId("calendar-item");
+            container.prefWidthProperty().bind(grid.widthProperty().multiply(0.12));
+            container.prefHeightProperty().bind(grid.widthProperty().multiply(0.08));
+
+            container.getChildren().add(getTextNormal(String.valueOf(i), white));
+
+            // fill in the VBox
+            if (events.containsKey(i)) {
+                for (ObservableEvent event : events.get(i)) {
+                    container.getChildren().add(getTextNormal(event.courseCodeProperty().get() + " " +event.nameProperty().get(), white));
+                }
+            }
+            containers[i] = container;
+
+            grid.add(container, gridColumnNumber, gridRowNumber);
+            gridColumnNumber++;
+            if (gridColumnNumber == 7) {
+                gridColumnNumber = 0;
+                gridRowNumber++;
+            }
         }
+
+        assert (containers[0] == null) : "containers[0] is used";
 
 
         JFXDepthManager.setDepth(grid, 1);
@@ -648,7 +682,7 @@ public class PresenterElements {
     /**
      * Returns a JFXTextField with labelFloat set to true and prompt text set to the input prompt text, with its width bound to the input Pane specified by the input bindRatio.
      * If numericFilter is set to true, a numeric filter is also set such that only numeric values can be entered.
-     *
+     * <p>
      * Note that the numeric filter is unable to catch input cases of ending with a . (period), so this edge case should be accounted for when using it as a field for numbers.
      *
      * @param root          the Pane to bind the JFXTextField's width to
