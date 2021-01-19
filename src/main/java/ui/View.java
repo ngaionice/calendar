@@ -1,16 +1,14 @@
 package ui;
 
-import com.jfoenix.controls.JFXButton;
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 public class View extends Application {
 
-    int viewWidth = 1280;
-    int viewHeight = 720;
+    int viewWidth = 1408;
+    int viewHeight = 792;
 
     Presenter pr;
 

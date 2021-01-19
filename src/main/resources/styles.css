@@ -9,6 +9,11 @@
 }
 
 @font-face {
+    font-family: "Roboto Thin";
+    src: url("fonts/RobotoThin.ttf");
+}
+
+@font-face {
     font-family: "Roboto Medium";
     src: url("fonts/RobotoMedium.ttf");
 }
@@ -189,7 +194,9 @@ Note that to shift tabs left/right, both the 2nd value and 4th value have to be 
 floating buttons
 */
 #add .ikonli-font-icon,
-#save .ikonli-font-icon {
+#save .ikonli-font-icon,
+#left-button .ikonli-font-icon,
+#right-button .ikonli-font-icon {
     -fx-icon-color: white;
     -fx-icon-size: 20px;
 }
@@ -206,6 +213,14 @@ floating buttons
     -fx-icon-code: "mdi-plus-box";
     -fx-icon-color: white;
     -fx-icon-size: 15px;
+}
+
+#left-button .ikonli-font-icon {
+    -fx-icon-code: "mdi-chevron-left";
+}
+
+#right-button .ikonli-font-icon {
+    -fx-icon-code: "mdi-chevron-right";
 }
 
 .jfx-text-field {
@@ -227,7 +242,22 @@ floating buttons
     -fx-min-height: -fx-pref-height;
     -fx-max-height: -fx-pref-height;
     -jfx-button-type: RAISED;
+}
 
+#left-button,
+#right-button {
+    -fx-background-radius: 24px;
+    -fx-pref-height: 24px;
+    -fx-pref-width: 24px;
+    -fx-min-width: -fx-pref-width;
+    -fx-max-width: -fx-pref-width;
+    -fx-min-height: -fx-pref-height;
+    -fx-max-height: -fx-pref-height;
+}
+
+#left-button .jfx-rippler,
+#right-button .jfx-rippler {
+    -jfx-rippler-fill: -fx-accent;
 }
 
 .animated-option-button .jfx-rippler{
@@ -302,12 +332,30 @@ floating buttons
     -fx-fill: white;
 }
 
-#calendar-item {
-    /*-fx-border-color: #FF9800;*/
-    /*-fx-border-width: 0, 0, 0, 2;*/
-    -fx-padding: 8;
+#calendar-date {
+    -fx-border-color: -fx-accent;
+    -fx-border-insets: 8 0 0 0;
+    -fx-border-width: 0 0 0 2;
+    -fx-padding: 0 4 4 4;
     -fx-spacing: 4;
     -fx-alignment: top-center;
+}
+
+#calendar-item {
+    -fx-background-color: #424242;
+    -fx-background-radius: 3px;
+    -fx-alignment: center-left;
+    -fx-padding: 2;
+}
+
+#calendar-event {
+    -fx-fill: white;
+}
+
+#calendar-week-header {
+    -fx-font-family: "Roboto Medium";
+    -fx-font-size: 12px;
+    -fx-fill: white;
 }
 
 

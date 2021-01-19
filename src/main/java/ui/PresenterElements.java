@@ -13,20 +13,20 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextBoundsType;
 import javafx.util.Duration;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.time.format.TextStyle;
 import java.time.temporal.IsoFields;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
@@ -459,6 +459,9 @@ public class PresenterElements {
             grid3.getRowConstraints().add(new RowConstraints(48));
 
             for (int i = 0; i < items.get(); i++) {
+                if (eventNames[i] == null || eventNames[i].trim().equals("")) {
+                    continue;
+                }
                 HBox box = new HBox(16);
                 box.setAlignment(Pos.CENTER_LEFT);
                 box.prefWidthProperty().bind(grid3.widthProperty().multiply(0.96));
@@ -469,7 +472,7 @@ public class PresenterElements {
                 Region spacer = new Region();
                 HBox.setHgrow(spacer, Priority.ALWAYS);
 
-                box.getChildren().addAll(Arrays.asList(getTextNormal(eventNames[i] != null ? eventNames[i] : "Blank name", white),
+                box.getChildren().addAll(Arrays.asList(getTextNormal(eventNames[i], white),
                         spacer, dates[i], times[i]));
                 if (isRecurring) {
                     skipDates[i] = getDatePicker(content, "Skip date (optional)", 0.28);
@@ -563,7 +566,7 @@ public class PresenterElements {
         dueDateCol.prefWidthProperty().bind(table.widthProperty().multiply(0.16));
         weightCol.prefWidthProperty().bind(table.widthProperty().multiply(0.24));
 
-        List<TableColumn<ObservableEvent, ?>> items = new ArrayList<>(Arrays.asList(codeCol, nameCol, dueDateCol, weightCol));
+        List<TableColumn<ObservableEvent, ?>> items = new ArrayList<>(Arrays.asList(dueDateCol, codeCol, nameCol, weightCol));
         if (!isUpcoming) {
             TableColumn<ObservableEvent, Double> markCol = new TableColumn<>("Mark");
             markCol.setCellValueFactory(new PropertyValueFactory<>("mark"));
@@ -616,59 +619,78 @@ public class PresenterElements {
     StackPane getCalendarMonthContent(Scene sc, PresenterLogic logic) {
         StackPane root = new StackPane();
         root.setPadding(largerMargin);
+        root.setAlignment(Pos.TOP_CENTER);
+
+        LocalDate today = LocalDateTime.now().toLocalDate();
+        AtomicInteger year = new AtomicInteger(today.getYear());
+        AtomicInteger month = new AtomicInteger(today.getMonth().getValue());
+        AtomicReference<LocalDate> firstDay = new AtomicReference<>(LocalDate.of(year.get(), month.get(), 1).with(TemporalAdjusters.firstDayOfMonth()));
+        AtomicReference<LocalDate> lastDay = new AtomicReference<>(LocalDate.of(year.get(), month.get(), 1).with(TemporalAdjusters.lastDayOfMonth()));
+
+        AtomicInteger firstWeek = new AtomicInteger(firstDay.get().get(IsoFields.WEEK_OF_WEEK_BASED_YEAR));
+        AtomicInteger lastWeek = new AtomicInteger(lastDay.get().get(IsoFields.WEEK_OF_WEEK_BASED_YEAR));
+        AtomicInteger numberOfRows = new AtomicInteger(lastWeek.get() - firstWeek.get() + 1);
+        assert (numberOfRows.get() > 0) : "Row number <= 0.";
 
         GridPane grid = new GridPane();
         grid.setPadding(mediumMargin);
         grid.setBackground(testBackground);
-        grid.setHgap(12);
-        grid.setVgap(12);
-        grid.setGridLinesVisible(true);
         grid.setAlignment(Pos.CENTER);
 
-        LocalDate today = LocalDateTime.now().toLocalDate();
-//        LocalDate start = today.minusDays(today.getDayOfWeek().getValue() % 7);
-        Month month = today.getMonth();
-        LocalDate firstDay = LocalDate.now().with(TemporalAdjusters.firstDayOfMonth());
-        LocalDate lastDay = LocalDate.now().with(TemporalAdjusters.lastDayOfMonth());
+        HBox header = new HBox();
+        header.setSpacing(12);
+        header.setPadding(new Insets(0, 24, 0, 24));
+        header.setAlignment(Pos.CENTER_LEFT);
 
-        int firstWeek = firstDay.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
-        int lastWeek = lastDay.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
-        int rowNumber = lastWeek - firstWeek + 1;
+        Text headerName = new Text(Month.of(month.get()).getDisplayName(TextStyle.FULL, new Locale("en")) + " " + year);
+        headerName.setId("content-supersize");
 
-        int gridColumnNumber = firstDay.getDayOfWeek().getValue() == 7 ? 0 : firstDay.getDayOfWeek().getValue();
-        int gridRowNumber = 0;
+        JFXButton leftButton = new JFXButton();
+        leftButton.setGraphic(new FontIcon());
+        leftButton.setId("left-button");
 
-        assert (rowNumber > 0) : "Row number <= 0.";
+        JFXButton rightButton = new JFXButton();
+        rightButton.setGraphic(new FontIcon());
+        rightButton.setId("right-button");
 
-        Map<Integer, ObservableList<ObservableEvent>> events = logic.getEventsOfMonth();
-        VBox[] containers = new VBox[32];
+        header.getChildren().addAll(Arrays.asList(leftButton, rightButton, headerName));
+        grid.add(header, 0, 0, 7, 1);
+        grid.getRowConstraints().addAll(Arrays.asList(new RowConstraints(52), new RowConstraints(24)));
 
-        for (int i = 1; i <= lastDay.getDayOfMonth(); i++) {
+        setCalendarMonthWeekHeader(grid);
 
-            VBox container = new VBox();
-            container.setId("calendar-item");
-            container.prefWidthProperty().bind(grid.widthProperty().multiply(0.12));
-            container.prefHeightProperty().bind(grid.widthProperty().multiply(0.08));
-
-            container.getChildren().add(getTextNormal(String.valueOf(i), white));
-
-            // fill in the VBox
-            if (events.containsKey(i)) {
-                for (ObservableEvent event : events.get(i)) {
-                    container.getChildren().add(getTextNormal(event.courseCodeProperty().get() + " " +event.nameProperty().get(), white));
-                }
-            }
-            containers[i] = container;
-
-            grid.add(container, gridColumnNumber, gridRowNumber);
-            gridColumnNumber++;
-            if (gridColumnNumber == 7) {
-                gridColumnNumber = 0;
-                gridRowNumber++;
-            }
+        AtomicInteger gridRowNumber = new AtomicInteger(2);
+        AtomicInteger gridColumnNumber = new AtomicInteger();
+        if (firstDay.get().getDayOfWeek().getValue() == 7) {
+            gridColumnNumber.set(0);
+        } else {
+            gridColumnNumber.set(firstDay.get().getDayOfWeek().getValue());
         }
 
-        assert (containers[0] == null) : "containers[0] is used";
+        AtomicReference<Map<Integer, ObservableList<ObservableEvent>>> events = new AtomicReference<>(logic.getEventsOfMonth(LocalDate.of(year.get(), month.get(), 1)));
+        getCalendarMonthContentHelper(sc, grid, LocalDate.now(), events.get(), lastDay.get().getDayOfMonth(), gridColumnNumber.get(), gridRowNumber.get());
+
+        leftButton.setOnAction(click -> {
+            if (month.get() == 1) {
+                year.getAndDecrement();
+                month.set(12);
+            } else {
+                month.set(month.get() - 1);
+            }
+
+            calendarMonthGridUpdate(sc, logic, year, month, firstDay, lastDay, firstWeek, lastWeek, numberOfRows, grid, header, headerName, gridRowNumber, gridColumnNumber, events);
+        });
+
+        rightButton.setOnAction(click -> {
+            if (month.get() == 12) {
+                year.getAndIncrement();
+                month.set(1);
+            } else {
+                month.set(month.get() + 1);
+            }
+
+            calendarMonthGridUpdate(sc, logic, year, month, firstDay, lastDay, firstWeek, lastWeek, numberOfRows, grid, header, headerName, gridRowNumber, gridColumnNumber, events);
+        });
 
 
         JFXDepthManager.setDepth(grid, 1);
@@ -677,6 +699,86 @@ public class PresenterElements {
         return root;
     }
 
+    private void calendarMonthGridUpdate(Scene sc, PresenterLogic logic, AtomicInteger year, AtomicInteger month, AtomicReference<LocalDate> firstDay, AtomicReference<LocalDate> lastDay, AtomicInteger firstWeek, AtomicInteger lastWeek, AtomicInteger numberOfRows, GridPane grid, HBox header, Text headerName, AtomicInteger gridRowNumber, AtomicInteger gridColumnNumber, AtomicReference<Map<Integer, ObservableList<ObservableEvent>>> events) {
+        firstDay.set(LocalDate.of(year.get(), month.get(), 1).with(TemporalAdjusters.firstDayOfMonth()));
+        lastDay.set(LocalDate.of(year.get(), month.get(), 1).with(TemporalAdjusters.lastDayOfMonth()));
+        firstWeek.set(firstDay.get().get(IsoFields.WEEK_OF_WEEK_BASED_YEAR));
+        lastWeek.set(lastDay.get().get(IsoFields.WEEK_OF_WEEK_BASED_YEAR));
+        numberOfRows.set(lastWeek.get() - firstWeek.get() + 1);
+
+        events.set(logic.getEventsOfMonth(LocalDate.of(year.get(), month.get(), 1)));
+
+        gridRowNumber.set(2);
+        if (firstDay.get().getDayOfWeek().getValue() == 7) {
+            gridColumnNumber.set(0);
+        } else {
+            gridColumnNumber.set(firstDay.get().getDayOfWeek().getValue());
+        }
+
+        grid.getChildren().clear();
+        headerName.setText(Month.of(month.get()).getDisplayName(TextStyle.FULL, new Locale("en")) + " " + year);
+
+        grid.add(header, 0, 0, 7, 1);
+        setCalendarMonthWeekHeader(grid);
+
+        getCalendarMonthContentHelper(sc, grid, firstDay.get(), events.get(), lastDay.get().getDayOfMonth(), gridColumnNumber.get(), gridRowNumber.get());
+    }
+
+    private void getCalendarMonthContentHelper(Scene sc, GridPane grid, LocalDate date, Map<Integer, ObservableList<ObservableEvent>> events, int lastDay, int gridColumnNumber, int gridRowNumber) {
+        for (int i = 1; i <= lastDay; i++) {
+
+            VBox container = new VBox();
+            container.setId("calendar-date");
+            container.prefWidthProperty().bind(sc.widthProperty().multiply(0.12));
+            container.prefHeightProperty().bind(sc.heightProperty().multiply(0.16));
+            container.maxHeightProperty().bind(sc.heightProperty().multiply(0.16));
+
+            StackPane base = new StackPane();
+            Circle circle = new Circle(12);
+            Text text = getTextNormal(String.valueOf(i), white);
+            text.setBoundsType(TextBoundsType.VISUAL);
+            if (LocalDate.of(date.getYear(), date.getMonth().getValue(), i).equals(LocalDate.now())) {
+                circle.setFill(focus);
+            } else {
+                circle.setFill(Paint.valueOf("#1b1b1b"));
+            }
+            base.getChildren().addAll(Arrays.asList(circle, text));
+            container.getChildren().add(base);
+
+
+            // fill in the VBox
+            if (events.containsKey(i)) {
+                for (ObservableEvent event : events.get(i)) {
+                    HBox item = new HBox();
+                    item.setId("calendar-item");
+
+                    Text eventText = new Text(event.courseCodeProperty().get() + " " + event.nameProperty().get());
+                    eventText.setId("calendar-event");
+                    item.getChildren().add(eventText);
+                    container.getChildren().add(item);
+                }
+            }
+
+            grid.add(container, gridColumnNumber, gridRowNumber);
+            gridColumnNumber++;
+            if (gridColumnNumber == 7) {
+                gridColumnNumber = 0;
+                gridRowNumber++;
+            }
+        }
+    }
+
+    private void setCalendarMonthWeekHeader(GridPane grid) {
+        List<String> daysOfWeek = Arrays.asList("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT");
+        for (int i = 0; i < daysOfWeek.size(); i++) {
+            Text dayOfWeek = new Text(daysOfWeek.get(i));
+            dayOfWeek.setId("calendar-week-header");
+            HBox header = new HBox();
+            header.getChildren().add(dayOfWeek);
+            header.setAlignment(Pos.CENTER);
+            grid.add(header, i, 1);
+        }
+    }
     // textfields and selectors
 
     /**

@@ -97,6 +97,7 @@ public class PresenterLogic {
             if (name == null || name.trim().equals("")) {
                 continue;
             }
+            name = name.trim();
 
             // get event weighting in course
             double weight;
@@ -166,10 +167,8 @@ public class PresenterLogic {
      *
      * @return a map of ObservableList of ObservableEvents mapped by day of month
      */
-    Map<Integer, ObservableList<ObservableEvent>> getEventsOfMonth() {
+    Map<Integer, ObservableList<ObservableEvent>> getEventsOfMonth(LocalDate date) {
         Map<Integer, ObservableList<ObservableEvent>> eventsMap = new HashMap<>(31);
-
-        Month month = LocalDateTime.now().getMonth();
         DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
         // get all the events
@@ -180,10 +179,10 @@ public class PresenterLogic {
             events.addAll(getCourseEvents(courseID, false));
         }
 
-        // sort each event by date, extracting only the events in the same month
+        // sort each event by date, extracting only the events in the same year + month
         for (ObservableEvent event: events) {
             LocalDateTime dueDate = LocalDateTime.parse(event.dueDateProperty().get(), df);
-            if (dueDate.getMonth().getValue() == month.getValue()) {
+            if (dueDate.getMonth().getValue() == date.getMonth().getValue() && dueDate.getYear() == date.getYear()) {
                 if (!eventsMap.containsKey(dueDate.getDayOfMonth())) {
                     eventsMap.put(dueDate.getDayOfMonth(), FXCollections.observableArrayList(event));
                 } else {
