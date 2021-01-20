@@ -5,12 +5,14 @@ import com.jfoenix.effects.JFXDepthManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -18,6 +20,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextBoundsType;
+import javafx.stage.Popup;
 import javafx.util.Duration;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -154,6 +157,7 @@ public class PresenterElements {
         addTab(tabs, "Overview", getCourseOverviewContent(sc, logic));
 
         ObservableList<ObservableCourse> courses = logic.getCourses(true);
+        courses.sort(Comparator.comparing(o -> o.codeProperty().get()));
 
         for (ObservableCourse course : courses) {
             String code = course.codeProperty().get();
@@ -556,6 +560,7 @@ public class PresenterElements {
         TableColumn<ObservableEvent, String> codeCol = new TableColumn<>("Course code");
         TableColumn<ObservableEvent, String> nameCol = new TableColumn<>("Event name");
         TableColumn<ObservableEvent, Double> dueDateCol = new TableColumn<>("Due date");
+
         TableColumn<ObservableEvent, Double> weightCol = new TableColumn<>("Weight");
 
         codeCol.setCellValueFactory(new PropertyValueFactory<>("courseCode"));
@@ -566,7 +571,7 @@ public class PresenterElements {
         codeCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
         nameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.28));
         dueDateCol.prefWidthProperty().bind(table.widthProperty().multiply(0.16));
-        weightCol.prefWidthProperty().bind(table.widthProperty().multiply(0.24));
+        weightCol.prefWidthProperty().bind(table.widthProperty().multiply(0.08));
 
         List<TableColumn<ObservableEvent, ?>> columns = new ArrayList<>(Arrays.asList(dueDateCol, codeCol, nameCol, weightCol));
         if (!isUpcoming) {
@@ -575,6 +580,11 @@ public class PresenterElements {
             weightCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
             markCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
             columns.add(markCol);
+        } else {
+            TableColumn<ObservableEvent, Integer> remainingDaysCol = new TableColumn<>("Days left");
+            remainingDaysCol.setCellValueFactory(new PropertyValueFactory<>("remainingDays"));
+            remainingDaysCol.prefWidthProperty().bind(table.widthProperty().multiply(0.08));
+            columns.add(0, remainingDaysCol);
         }
         columns.forEach(item -> {
             item.getStyleClass().add("text-col");
@@ -733,8 +743,7 @@ public class PresenterElements {
             VBox container = new VBox();
             container.setId("calendar-date");
             container.prefWidthProperty().bind(sc.widthProperty().multiply(0.12));
-            container.prefHeightProperty().bind(sc.heightProperty().multiply(0.16));
-            container.maxHeightProperty().bind(sc.heightProperty().multiply(0.16));
+            container.prefHeightProperty().bind(sc.heightProperty().multiply(0.20));
 
             StackPane base = new StackPane();
             Circle circle = new Circle(12);
@@ -750,12 +759,29 @@ public class PresenterElements {
 
             // fill in the VBox
             if (events.containsKey(i)) {
+                events.get(i).sort(Comparator.comparing(o -> o.dueDateProperty().get()));
                 for (ObservableEvent event : events.get(i)) {
                     HBox item = new HBox();
                     item.setId("calendar-item");
 
                     Label eventText = new Label(event.courseCodeProperty().get() + " " + event.nameProperty().get());
                     eventText.setId("calendar-event");
+
+                    JFXPopup popup = new JFXPopup();
+                    StackPane stack = new StackPane();
+                    stack.setPadding(margin);
+                    stack.setAlignment(Pos.CENTER_LEFT);
+                    stack.minWidthProperty().bind(sc.widthProperty().multiply(0.12));
+                    stack.getChildren().add(new Text(event.courseCodeProperty().get() + " " + event.nameProperty().get() + " @ " + event.dueDateProperty().get().split(" ")[1]));
+                    popup.setPopupContent(stack);
+
+                    eventText.hoverProperty().addListener((obs, oldVal, newVal) -> {
+                        if (newVal) {
+                            popup.show(eventText);
+                        } else {
+                            popup.hide();
+                        }
+                    });
                     item.getChildren().add(eventText);
                     container.getChildren().add(item);
                 }

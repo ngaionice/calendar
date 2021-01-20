@@ -7,8 +7,8 @@ import javafx.stage.Stage;
 
 public class View extends Application {
 
-    int viewWidth = 1408;
-    int viewHeight = 792;
+    int viewWidth = 1280;
+    int viewHeight = 720;
 
     Presenter pr;
 

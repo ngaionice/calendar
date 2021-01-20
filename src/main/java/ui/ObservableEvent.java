@@ -1,12 +1,11 @@
 package ui;
 
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 public class ObservableEvent {
 
@@ -16,6 +15,7 @@ public class ObservableEvent {
     private final StringProperty id;
     private final DoubleProperty mark;
     private final DoubleProperty weight;
+    private final IntegerProperty remainingDays;
 
     public ObservableEvent(String name, String id, String courseCode, LocalDateTime dueDate, double mark, double weight) {
         this.name = new SimpleStringProperty(name);
@@ -24,6 +24,7 @@ public class ObservableEvent {
         this.dueDate = new SimpleStringProperty(dueDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
         this.mark = new SimpleDoubleProperty(mark);
         this.weight = new SimpleDoubleProperty(weight);
+        this.remainingDays = new SimpleIntegerProperty((int) ChronoUnit.DAYS.between(LocalDate.now(), dueDate.toLocalDate()));
     }
 
     public StringProperty nameProperty() {
@@ -48,5 +49,9 @@ public class ObservableEvent {
 
     public DoubleProperty weightProperty() {
         return weight;
+    }
+
+    public IntegerProperty remainingDaysProperty() {
+        return remainingDays;
     }
 }
