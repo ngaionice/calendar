@@ -1,6 +1,10 @@
 package ui;
 
 import javafx.application.Application;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.NumberBinding;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -11,6 +15,7 @@ public class View extends Application {
     int viewHeight = 720;
 
     Presenter pr;
+    BooleanBinding widthTracker;
 
     @Override
     public void start(Stage primaryStage) {
@@ -25,18 +30,24 @@ public class View extends Application {
         pr = new Presenter(scene);
         root.getChildren().add(pr.getLargeLayout());
 
-        // only change when it's larger than 600
-        primaryStage.widthProperty().greaterThan(800).addListener((observable, oldValue, newValue) -> {
-            if (!newValue) {
-                // shift to smaller layout
-                root.getChildren().clear();
-                root.getChildren().add(pr.getLargeLayout());
-            } else {
-                // shift to larger layout
-                root.getChildren().clear();
-                root.getChildren().add(pr.getLargeLayout());
-            }
-        });
+        NumberBinding currentWidth = primaryStage.widthProperty().add(0);
+        IntegerProperty width = new SimpleIntegerProperty();
+        width.bind(currentWidth);
+
+        widthTracker = width.greaterThan(750);
+
+        // only change when it's larger than 750
+//        widthTracker.addListener((observable, oldValue, newValue) -> {
+//            if (!newValue) {
+//                // shift to smaller layout
+//                root.getChildren().clear();
+//                root.getChildren().add(pr.getSmallLayout());
+//            } else {
+//                // shift to larger layout
+//                root.getChildren().clear();
+//                root.getChildren().add(pr.getLargeLayout());
+//            }
+//        });
     }
 
     public static void main(String[] args) {

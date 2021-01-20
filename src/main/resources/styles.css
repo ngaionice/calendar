@@ -264,7 +264,8 @@ floating buttons
     -jfx-rippler-fill: #FFF;
 }
 
-#dialog {
+#course-create-dialog,
+#event-edit-dialog {
     -fx-background-color: #212121;
 }
 
@@ -273,22 +274,26 @@ floating buttons
     -fx-pref-height: 120.0;
 }
 
-#raised-button {
-    -fx-background-color: #FF9800;
+#raised-button,
+#flat-button,
+#warning-flat-button {
     -fx-alignment: CENTER;
     -fx-pref-height: 32;
-    -fx-pref-width: 56;
+    -fx-pref-width: 60;
     -fx-background-radius: 3;
     -fx-font-family: "Roboto Medium";
 }
 
+#raised-button {
+    -fx-background-color: #FF9800;
+}
+
 #flat-button {
     -fx-text-fill: white;
-    -fx-alignment: CENTER;
-    -fx-pref-height: 32;
-    -fx-pref-width: 56;
-    -fx-background-radius: 3;
-    -fx-font-family: "Roboto Medium";
+}
+
+#warning-flat-button {
+    -fx-text-fill: #F44336;
 }
 
 #add-nav-button {

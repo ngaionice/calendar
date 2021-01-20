@@ -41,16 +41,11 @@ public class Controller {
         courses.setCode(courseID, courseCode);
     }
 
-    public void addEventToCourse(String courseID, String eventID, boolean recurring) {
-        if (recurring) {
-            courses.addRecurring(courseID, eventID);
-        } else {
-            courses.addOneTime(courseID, eventID);
-        }
+    public void addEventToCourse(String courseID, String eventID) {
+        courses.addOneTime(courseID, eventID);
     }
 
     public void removeEventFromCourse(String courseID, String eventID) {
-        courses.removeRecurring(courseID, eventID);
         courses.removeOneTime(courseID, eventID);
     }
 
@@ -68,7 +63,7 @@ public class Controller {
         return events.addEvent(name);
     }
 
-    public String addRecurringEvent(String name, int suffixStart, int occurrences, LocalDateTime startDate, LocalDate skipDate) {
+    public List<String> addRecurringEvent(String name, int suffixStart, int occurrences, LocalDateTime startDate, LocalDate skipDate) {
         return events.addRecurringEvent(name, suffixStart, occurrences, startDate, skipDate);
     }
 
@@ -116,16 +111,6 @@ public class Controller {
 
     public String getCourseCode(String courseID) {
         return courses.getCode(courseID);
-    }
-
-    /**
-     * Returns a list of recurring events' IDs of the specified course.
-     *
-     * @param courseID ID of the course
-     * @return list of recurring IDs that are of the course
-     */
-    public List<String> getRecurringCourseEvents(String courseID) {
-        return courses.getRecurring(courseID);
     }
 
     /**
@@ -185,14 +170,6 @@ public class Controller {
 
     public Duration getEventDuration(String eventID) {
         return events.getDuration(eventID);
-    }
-
-    public String getEventRecurrence(String eventID) {
-        return events.getRecurrence(eventID);
-    }
-
-    public List<String> getRecurringEventInstances(String recurringID) {
-        return events.getRecurringEventInstances(recurringID);
     }
 
     public double getEventGrade(String eventID) {

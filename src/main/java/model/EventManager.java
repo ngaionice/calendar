@@ -9,13 +9,9 @@ import java.util.*;
 public class EventManager {
 
     private Map<String, Event> map;
-    private Map<String, String> recurringMap = new HashMap<>(10);   // key is recurringID, value is name
 
     // note that there are 2 types of ID here: recurringID and eventID;
-    // a recurringID is a variable in an Event, and is used for grouping purposes;
     // eventID is the unique identifier for an Event
-
-    // recurringID can be used to calculate 'best 3 of 5 assignments' etc purposes in the future
 
     // setters
 
@@ -35,22 +31,21 @@ public class EventManager {
      * @param skipDate    the LocalDate that this event gets skipped (does not occur) on
      * @return the recurring ID
      */
-    String addRecurringEvent(String name, int suffixStart, int occurrences, LocalDateTime startDate, LocalDate skipDate) {
-        String recurringID = UUID.randomUUID().toString();
-        recurringMap.put(recurringID, name);
+    List<String> addRecurringEvent(String name, int suffixStart, int occurrences, LocalDateTime startDate, LocalDate skipDate) {
+        List<String> eventIDs = new ArrayList<>();
         LocalDate currDate = startDate.toLocalDate();
         LocalTime dueTime = startDate.toLocalTime();
         for (int i = suffixStart; i < occurrences + suffixStart; i++) {
             if (!currDate.equals(skipDate)) {
                 String eventID = addEvent(name + " " + i);
                 setDueDate(eventID, LocalDateTime.of(currDate, dueTime));
-                setRecurringID(eventID, recurringID);
+                eventIDs.add(eventID);
             } else {
                 i--;
             }
             currDate = currDate.plusDays(7);
         }
-        return recurringID;
+        return eventIDs;
     }
 
     void removeEvent(String eventID) {
@@ -89,9 +84,6 @@ public class EventManager {
         map.get(eventID).addNotes(notes);
     }
 
-    private void setRecurringID(String eventID, String recurringID) {
-        map.get(eventID).setRecurringID(recurringID);
-    }
 
     // getters
 
@@ -105,10 +97,6 @@ public class EventManager {
 
     Duration getDuration(String eventID) {
         return map.get(eventID).getDuration();
-    }
-
-    String getRecurrence(String eventID) {
-        return map.get(eventID).getRecurringID();
     }
 
     double getGrade(String eventID) {
@@ -130,26 +118,6 @@ public class EventManager {
 
     List<String> getNotes(String eventID) {
         return map.get(eventID).getNotes();
-    }
-
-    String getRecurringEventName(String recurringID) {
-        return recurringMap.get(recurringID);
-    }
-
-    /**
-     * Returns the event IDs associated with the input recurring event ID.
-     *
-     * @param recurringID ID of the recurring event
-     * @return list of event IDs
-     */
-    List<String> getRecurringEventInstances(String recurringID) {
-        List<String> eventIDs = new ArrayList<>();
-        for (Event event : map.values()) {
-            if (event.getRecurringID() != null && event.getRecurringID().equals(recurringID)) {
-                eventIDs.add(event.getID());
-            }
-        }
-        return eventIDs;
     }
 
     // data import/export

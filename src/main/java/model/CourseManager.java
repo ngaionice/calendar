@@ -29,14 +29,6 @@ public class CourseManager  {
         map.get(courseID).setCode(code);
     }
 
-    void addRecurring(String courseID, String recurringID) {
-        map.get(courseID).addRecurring(recurringID);
-    }
-
-    void removeRecurring(String courseID, String recurringID) {
-        map.get(courseID).removeRecurring(recurringID);
-    }
-
     void addOneTime(String courseID, String eventID) {
         map.get(courseID).addOneTime(eventID);
     }
@@ -65,10 +57,6 @@ public class CourseManager  {
 
     String getCode(String courseID) {
         return map.get(courseID).getCode();
-    }
-
-    List<String> getRecurring(String courseID) {
-        return map.get(courseID).getRecurring();
     }
 
     List<String> getOneTime(String courseID) {

@@ -4,15 +4,12 @@ import com.jfoenix.controls.*;
 import com.jfoenix.effects.JFXDepthManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
-import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -20,7 +17,6 @@ import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextBoundsType;
-import javafx.stage.Popup;
 import javafx.util.Duration;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -37,6 +33,7 @@ import java.util.function.UnaryOperator;
 
 public class PresenterElements {
 
+    Scene sc;
     PresenterLogic logic;
 
     Background testBackground = new Background(new BackgroundFill(Color.rgb(27, 27, 27), CornerRadii.EMPTY, Insets.EMPTY));
@@ -54,11 +51,12 @@ public class PresenterElements {
     Paint whiteLight = Paint.valueOf("#EEEEEE");
     Paint gray = Paint.valueOf("#4D4D4D");
 
-    public PresenterElements(PresenterLogic logic) {
+    public PresenterElements(Scene sc, PresenterLogic logic) {
+        this.sc = sc;
         this.logic = logic;
     }
 
-    VBox getNav(Scene sc, BorderPane content) {
+    VBox getNav(BorderPane content) {
         VBox box = new VBox();
 
         List<JFXButton> mainButtons = Arrays.asList(new JFXButton("Calendar"), new JFXButton("Courses"),
@@ -83,28 +81,28 @@ public class PresenterElements {
         spacer.prefHeightProperty().bind(sc.heightProperty().multiply(0.125));
 
         mainButtons.get(0).setOnAction(event -> {
-            content.setCenter(getCalendarPane(sc, logic));
-            content.setTop(getHeader(sc, "Calendar"));
+            content.setCenter(getCalendarPane());
+            content.setTop(getLargeLayoutHeader("Calendar"));
         });
 
         mainButtons.get(1).setOnAction(event -> {
-            content.setCenter(getCoursesPane(sc, logic));
-            content.setTop(getHeader(sc, "Courses"));
+            content.setCenter(getCoursesPane());
+            content.setTop(getLargeLayoutHeader("Courses"));
         });
 
         mainButtons.get(2).setOnAction(event -> {
-            content.setCenter(getEventsPane(sc, logic));
-            content.setTop(getHeader(sc, "Upcoming"));
+            content.setCenter(getEventsPane());
+            content.setTop(getLargeLayoutHeader("Upcoming"));
         });
 
         mainButtons.get(3).setOnAction(event -> {
-            content.setCenter(getArchivePane(sc, logic));
-            content.setTop(getHeader(sc, "Archive"));
+            content.setCenter(getArchivePane());
+            content.setTop(getLargeLayoutHeader("Archive"));
         });
 
         mainButtons.get(4).setOnAction(event -> {
             content.setCenter(getTabPane());
-            content.setTop(getHeader(sc, "Settings"));
+            content.setTop(getLargeLayoutHeader("Settings"));
         });
 
         box.getChildren().add(spacer);
@@ -116,6 +114,41 @@ public class PresenterElements {
         box.setSpacing(8);
 
         return box;
+    }
+
+    HBox getLargeLayoutHeader(String headerText) {
+        HBox root = new HBox();
+        root.setBackground(accentBackground);
+        root.prefHeightProperty().bind(sc.heightProperty().multiply(0.07));
+        root.setPadding(largerMargin);
+        root.setAlignment(Pos.CENTER_LEFT);
+
+        root.getChildren().add(getTextH2(headerText, "#FFFFFF"));
+
+        return root;
+    }
+
+    HBox getSmallLayoutHeader(String headerText, BorderPane content) {
+        // TODO: fix this thing, not working yet
+        HBox root = new HBox();
+        root.setBackground(accentBackground);
+        root.prefHeightProperty().bind(sc.heightProperty().multiply(0.07));
+        root.setPadding(largerMargin);
+        root.setAlignment(Pos.CENTER_LEFT);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        JFXButton navButton = new JFXButton();
+        JFXDrawer drawer = new JFXDrawer();
+        drawer.setSidePane(getNav(content));
+        navButton.setOnAction(event -> drawer.open());
+
+        root.getChildren().add(getTextH2(headerText, "#FFFFFF"));
+        root.getChildren().add(spacer);
+        root.getChildren().add(navButton);
+
+        return root;
     }
 
     JFXTabPane getTabPane() {
@@ -136,37 +169,26 @@ public class PresenterElements {
         tabs.getTabs().add(tab);
     }
 
-    HBox getHeader(Scene sc, String headerText) {
-        HBox root = new HBox();
-        root.setBackground(accentBackground);
-        root.prefHeightProperty().bind(sc.heightProperty().multiply(0.07));
-        root.setPadding(largerMargin);
-        root.setAlignment(Pos.CENTER_LEFT);
-
-        root.getChildren().add(getTextH2(headerText, "#FFFFFF"));
-
-        return root;
-    }
-
-    JFXTabPane getCoursesPane(Scene sc, PresenterLogic logic) {
+    // COURSES
+    JFXTabPane getCoursesPane() {
         JFXTabPane tabs = new JFXTabPane();
         tabs.setTabMinWidth(104);
         tabs.setTabMaxWidth(104);
         tabs.setTabMinHeight(24);
 
-        addTab(tabs, "Overview", getCourseOverviewContent(sc, logic));
+        addTab(tabs, "Overview", getCourseOverviewContent());
 
-        ObservableList<ObservableCourse> courses = logic.getCourses(true);
+        ObservableList<ObservableCourse> courses = logic.getCourses();
         courses.sort(Comparator.comparing(o -> o.codeProperty().get()));
 
         for (ObservableCourse course : courses) {
             String code = course.codeProperty().get();
-            addTab(tabs, code, getCourseContent(sc, course, logic));
+            addTab(tabs, code, getCourseContent(course));
         }
         return tabs;
     }
 
-    StackPane getCourseContent(Scene sc, ObservableCourse course, PresenterLogic logic) {
+    StackPane getCourseContent(ObservableCourse course) {
         StackPane root = new StackPane();
         root.setPadding(largerMargin);
 
@@ -218,12 +240,12 @@ public class PresenterElements {
 
         TableColumn<ObservableEvent, String> nameCol = new TableColumn<>("Past events");
         TableColumn<ObservableEvent, String> dueDateCol = new TableColumn<>("Due date");
-        TableColumn<ObservableEvent, Double> markCol = new TableColumn<>("Mark");
+        TableColumn<ObservableEvent, Double> gradeCol = new TableColumn<>("Grade");
         TableColumn<ObservableEvent, Double> weightCol = new TableColumn<>("Weight");
 
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
         dueDateCol.setCellValueFactory(new PropertyValueFactory<>("dueDate"));
-        markCol.setCellValueFactory(new PropertyValueFactory<>("mark"));
+        gradeCol.setCellValueFactory(new PropertyValueFactory<>("mark"));
         weightCol.setCellValueFactory(new PropertyValueFactory<>("weight"));
 
         nameColU.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -233,13 +255,13 @@ public class PresenterElements {
         nameCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.56));
         dueDateCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.24));
         weightCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.12));
-        markCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.04));
+        gradeCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.04));
 
         nameColU.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.56));
         dueDateColU.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.24));
         weightColU.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.16));
 
-        List<TableColumn<ObservableEvent, ?>> items = Arrays.asList(nameCol, dueDateCol, weightCol, markCol, nameColU, dueDateColU, weightColU);
+        List<TableColumn<ObservableEvent, ?>> items = Arrays.asList(nameCol, dueDateCol, weightCol, gradeCol, nameColU, dueDateColU, weightColU);
         items.forEach(item -> {
             item.getStyleClass().add("text-col");
             item.setResizable(false);
@@ -248,7 +270,22 @@ public class PresenterElements {
         upcoming.getColumns().addAll(items.subList(4, 7));
         past.getColumns().addAll(items.subList(0, 4));
 
-        upcoming.setItems(logic.getCourseEvents(course.idProperty().get(), true));
+        ObservableList<ObservableEvent> upcomingData = logic.getCourseEvents(course.idProperty().get(), true);
+
+        upcoming.setRowFactory(view -> {
+            TableRow<ObservableEvent> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (! row.isEmpty()) ) {
+                    ObservableEvent rowData = row.getItem();
+                    JFXDialog editDialog = getEventEditDialog(root, upcomingData, rowData, true);
+                    root.getChildren().add(editDialog);
+                    editDialog.show();
+                }
+            });
+            return row;
+        });
+
+        upcoming.setItems(upcomingData);
         past.setItems(logic.getCourseEvents(course.idProperty().get(), false));
 
         upcoming.getSortOrder().add(dueDateColU);
@@ -261,7 +298,7 @@ public class PresenterElements {
         return root;
     }
 
-    StackPane getCourseOverviewContent(Scene sc, PresenterLogic logic) {
+    StackPane getCourseOverviewContent() {
         StackPane root = new StackPane();
         root.setPadding(largerMargin);
 
@@ -297,7 +334,7 @@ public class PresenterElements {
             item.setResizable(false);
         });
 
-        ObservableList<ObservableCourse> courseData = logic.getCourses(true);
+        ObservableList<ObservableCourse> courseData = logic.getCourses();
 
         table.getColumns().addAll(items);
         table.setItems(courseData);
@@ -310,7 +347,7 @@ public class PresenterElements {
         addCourse.getStyleClass().add("animated-option-button");
 
         addCourse.setOnAction(click -> {
-            JFXDialog addDialog = getCourseCreateDialog(root, 0.8, 0.9);
+            JFXDialog addDialog = getCourseCreateDialog(courseData, root, 0.8, 0.9);
             root.getChildren().add(addDialog);
             addDialog.show();
         });
@@ -326,10 +363,10 @@ public class PresenterElements {
         return root;
     }
 
-    JFXDialog getCourseCreateDialog(StackPane root, double hBindRatio, double vBindRatio) {
+    JFXDialog getCourseCreateDialog(ObservableList<ObservableCourse> courseData, StackPane root, double hBindRatio, double vBindRatio) {
         JFXDialogLayout layout = new JFXDialogLayout();
         JFXDialog dialog = new JFXDialog(root, layout, JFXDialog.DialogTransition.CENTER);
-        layout.setId("dialog");
+        layout.setId("course-create-dialog");
 
         StackPane content = new StackPane();
         content.setPadding(mediumMargin);
@@ -497,12 +534,13 @@ public class PresenterElements {
             actions.getChildren().addAll(Arrays.asList(backButtons.get(1), nextButtons.get(2)));
         });
         nextButtons.get(2).setOnAction(event -> {
-            boolean saved = logic.verifyAndAddCourse(courseName.get(), courseCode.get(), eventNames, marks, recurrings,
+            String courseID = logic.verifyAndAddCourse(courseName.get(), courseCode.get(), eventNames, marks, recurrings,
                     dates, times, skipDates, occurrences, offsets, grid3.getRowConstraints().size());
-            if (saved) {
+            if (!courseID.equals("")) {
                 dialog.close();
                 root.getChildren().remove(dialog);
-                confirmation.enqueue(getSnackbarEvent(root, "Course added, please refresh the tab to see changes", 0.64, 0.08));
+                confirmation.enqueue(getSnackbarEvent(root, "Course added, refresh to view the new course tab", 0.64, 0.08));
+                courseData.add(logic.getObservableCourse(courseID, courseCode.get()));
             } else {
                 System.out.println("not saved");
                 failure.enqueue(getSnackbarEvent(content, "Invalid data, please try again", 0.64, 0.12));
@@ -536,17 +574,18 @@ public class PresenterElements {
         return dialog;
     }
 
-    JFXTabPane getEventsPane(Scene sc, PresenterLogic logic) {
+    // EVENTS
+    JFXTabPane getEventsPane() {
         JFXTabPane tabs = new JFXTabPane();
         tabs.setTabMinWidth(104);
         tabs.setTabMaxWidth(104);
         tabs.setTabMinHeight(24);
 
-        addTab(tabs, "View", getEventOverviewContent(sc, logic, true));
+        addTab(tabs, "View", getEventOverviewContent(true));
         return tabs;
     }
 
-    StackPane getEventOverviewContent(Scene sc, PresenterLogic logic, boolean isUpcoming) {
+    StackPane getEventOverviewContent(boolean isUpcoming) {
         StackPane root = new StackPane();
         root.setPadding(largerMargin);
 
@@ -607,29 +646,90 @@ public class PresenterElements {
         return root;
     }
 
-    JFXTabPane getArchivePane(Scene sc, PresenterLogic logic) {
+    JFXTabPane getArchivePane() {
         JFXTabPane tabs = new JFXTabPane();
         tabs.setTabMinWidth(104);
         tabs.setTabMaxWidth(104);
         tabs.setTabMinHeight(24);
 
-        addTab(tabs, "Events", getEventOverviewContent(sc, logic, false));
+        addTab(tabs, "Events", getEventOverviewContent(false));
         addTab(tabs, "Courses", new Label("Not implemented yet."));
         return tabs;
     }
 
-    JFXTabPane getCalendarPane(Scene sc, PresenterLogic logic) {
+    JFXDialog getEventEditDialog(StackPane root, ObservableList<ObservableEvent> events, ObservableEvent event, boolean isUpcoming) {
+        JFXDialogLayout layout = new JFXDialogLayout();
+        JFXDialog dialog = new JFXDialog(root, layout, JFXDialog.DialogTransition.CENTER);
+        layout.setId("event-edit-dialog");
+
+        Text headerText = new Text("Editing " + event.nameProperty().get());
+        headerText.setId("dialog-header");
+
+        StackPane content = new StackPane();
+        content.setPadding(mediumMargin);
+
+        GridPane grid = new GridPane();
+        grid.getRowConstraints().addAll(Arrays.asList(new RowConstraints(52), new RowConstraints(52), new RowConstraints(52), new RowConstraints(52)));
+        content.getChildren().add(grid);
+
+        JFXTextField nameField = getTextField(content, "Name", 0.56, false);
+        JFXTextField weightField = getTextField(content, "Weight", 0.56, true);
+        JFXDatePicker datePicker = getDatePicker(content, "Due date", 0.28);
+        JFXTimePicker timePicker = getTimePicker(content, "Due time", 0.28);
+
+        grid.add(nameField, 0, 0, 2, 1);
+        grid.add(weightField, 0, 2, 2, 1);
+        grid.add(datePicker, 0, 1);
+        grid.add(timePicker, 1, 1);
+        JFXTextField gradeField = null;
+        if (!isUpcoming) {
+            gradeField = getTextField(content, "Grade", 0.56, true);
+            grid.add(gradeField, 0, 3, 2, 1);
+        }
+
+        HBox actions = new HBox(12);
+        actions.setPadding(margin);
+
+        JFXButton save = new JFXButton("SAVE");
+        save.setId("raised-button");
+        JFXButton delete = new JFXButton("DELETE");
+        delete.setId("flat-button");
+
+        actions.getChildren().addAll(Arrays.asList(delete, save));
+
+        JFXTextField finalGradeField = gradeField;
+        save.setOnAction(click -> {
+            logic.updateEvent(event, nameField.getText(), datePicker.getValue(), timePicker.getValue(), !isUpcoming ? finalGradeField.getText() : null, weightField.getText());
+            dialog.close();
+        });
+        delete.setOnAction(click -> {
+            logic.deleteEvent(events, event);
+            dialog.close();
+        });
+
+        layout.setHeading(headerText);
+        layout.setBody(content);
+        layout.setActions(actions);
+
+        layout.prefWidthProperty().bind(root.widthProperty().multiply(0.5));
+        layout.prefHeightProperty().bind(root.heightProperty().multiply(0.8));
+
+        return dialog;
+    }
+
+    // CALENDAR
+    JFXTabPane getCalendarPane() {
         JFXTabPane tabs = new JFXTabPane();
         tabs.setTabMinWidth(104);
         tabs.setTabMaxWidth(104);
         tabs.setTabMinHeight(24);
 
-        addTab(tabs, "Month", getCalendarMonthContent(sc, logic));
+        addTab(tabs, "Month", getCalendarMonthContent());
         addTab(tabs, "Week", new Label("Not implemented yet."));
         return tabs;
     }
 
-    StackPane getCalendarMonthContent(Scene sc, PresenterLogic logic) {
+    StackPane getCalendarMonthContent() {
         StackPane root = new StackPane();
         root.setPadding(largerMargin);
         root.setAlignment(Pos.TOP_CENTER);
@@ -681,7 +781,7 @@ public class PresenterElements {
         }
 
         AtomicReference<Map<Integer, ObservableList<ObservableEvent>>> events = new AtomicReference<>(logic.getEventsOfMonth(LocalDate.of(year.get(), month.get(), 1)));
-        getCalendarMonthContentHelper(sc, grid, LocalDate.now(), events.get(), lastDay.get().getDayOfMonth(), gridColumnNumber.get(), gridRowNumber.get());
+        getCalendarMonthContentHelper(grid, LocalDate.now(), events.get(), lastDay.get().getDayOfMonth(), gridColumnNumber.get(), gridRowNumber.get());
 
         leftButton.setOnAction(click -> {
             if (month.get() == 1) {
@@ -691,7 +791,7 @@ public class PresenterElements {
                 month.set(month.get() - 1);
             }
 
-            calendarMonthGridUpdate(sc, logic, year, month, firstDay, lastDay, firstWeek, lastWeek, numberOfRows, grid, header, headerName, gridRowNumber, gridColumnNumber, events);
+            calendarMonthGridUpdate(year, month, firstDay, lastDay, firstWeek, lastWeek, numberOfRows, grid, header, headerName, gridRowNumber, gridColumnNumber, events);
         });
 
         rightButton.setOnAction(click -> {
@@ -702,7 +802,7 @@ public class PresenterElements {
                 month.set(month.get() + 1);
             }
 
-            calendarMonthGridUpdate(sc, logic, year, month, firstDay, lastDay, firstWeek, lastWeek, numberOfRows, grid, header, headerName, gridRowNumber, gridColumnNumber, events);
+            calendarMonthGridUpdate(year, month, firstDay, lastDay, firstWeek, lastWeek, numberOfRows, grid, header, headerName, gridRowNumber, gridColumnNumber, events);
         });
 
 
@@ -712,7 +812,7 @@ public class PresenterElements {
         return root;
     }
 
-    private void calendarMonthGridUpdate(Scene sc, PresenterLogic logic, AtomicInteger year, AtomicInteger month, AtomicReference<LocalDate> firstDay, AtomicReference<LocalDate> lastDay, AtomicInteger firstWeek, AtomicInteger lastWeek, AtomicInteger numberOfRows, GridPane grid, HBox header, Text headerName, AtomicInteger gridRowNumber, AtomicInteger gridColumnNumber, AtomicReference<Map<Integer, ObservableList<ObservableEvent>>> events) {
+    private void calendarMonthGridUpdate(AtomicInteger year, AtomicInteger month, AtomicReference<LocalDate> firstDay, AtomicReference<LocalDate> lastDay, AtomicInteger firstWeek, AtomicInteger lastWeek, AtomicInteger numberOfRows, GridPane grid, HBox header, Text headerName, AtomicInteger gridRowNumber, AtomicInteger gridColumnNumber, AtomicReference<Map<Integer, ObservableList<ObservableEvent>>> events) {
         firstDay.set(LocalDate.of(year.get(), month.get(), 1).with(TemporalAdjusters.firstDayOfMonth()));
         lastDay.set(LocalDate.of(year.get(), month.get(), 1).with(TemporalAdjusters.lastDayOfMonth()));
         firstWeek.set(firstDay.get().get(IsoFields.WEEK_OF_WEEK_BASED_YEAR));
@@ -734,10 +834,10 @@ public class PresenterElements {
         grid.add(header, 0, 0, 7, 1);
         setCalendarMonthWeekHeader(grid);
 
-        getCalendarMonthContentHelper(sc, grid, firstDay.get(), events.get(), lastDay.get().getDayOfMonth(), gridColumnNumber.get(), gridRowNumber.get());
+        getCalendarMonthContentHelper(grid, firstDay.get(), events.get(), lastDay.get().getDayOfMonth(), gridColumnNumber.get(), gridRowNumber.get());
     }
 
-    private void getCalendarMonthContentHelper(Scene sc, GridPane grid, LocalDate date, Map<Integer, ObservableList<ObservableEvent>> events, int lastDay, int gridColumnNumber, int gridRowNumber) {
+    private void getCalendarMonthContentHelper(GridPane grid, LocalDate date, Map<Integer, ObservableList<ObservableEvent>> events, int lastDay, int gridColumnNumber, int gridRowNumber) {
         for (int i = 1; i <= lastDay; i++) {
 
             VBox container = new VBox();

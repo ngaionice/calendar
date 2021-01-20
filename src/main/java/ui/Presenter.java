@@ -17,19 +17,35 @@ public class Presenter {
         con.importData("courses.ser", "events.ser");
         sc = scene;
         logic = new PresenterLogic(con);
-        elements = new PresenterElements(logic);
+        elements = new PresenterElements(sc, logic);
     }
 
     BorderPane getLargeLayout() {
         BorderPane root = new BorderPane();
 
         BorderPane content = new BorderPane();
-        VBox nav = elements.getNav(sc, content);
+        VBox nav = elements.getNav(content);
 
-        content.setTop(elements.getHeader(sc, "Upcoming"));
-        content.setCenter(elements.getCalendarPane(sc, logic));
+        content.setTop(elements.getLargeLayoutHeader("Upcoming"));
+        content.setCenter(elements.getCalendarPane());
 
         root.setLeft(nav);
+        root.setCenter(content);
+
+        return root;
+    }
+
+    BorderPane getSmallLayout() {
+        BorderPane root = new BorderPane();
+
+        BorderPane content = new BorderPane();
+        VBox nav = elements.getNav(content);
+
+        content.setTop(elements.getSmallLayoutHeader("Upcoming", root));
+        content.setCenter(elements.getCalendarPane());
+
+//        root.setLeft(nav);
+        root.setLeft(null);
         root.setCenter(content);
 
         return root;

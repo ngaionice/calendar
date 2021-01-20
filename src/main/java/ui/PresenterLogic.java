@@ -7,11 +7,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import model.Controller;
 
-import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,35 +22,32 @@ public class PresenterLogic {
         this.con = con;
     }
 
-    ObservableList<ObservableCourse> getCourses(boolean includeRecurring) {
+    ObservableList<ObservableCourse> getCourses() {
         ObservableList<ObservableCourse> courses = FXCollections.observableArrayList();
         Map<String, String> courseInfo = con.getAllCourseInfo();
 
         for (String id : courseInfo.keySet()) {
             String code = courseInfo.get(id);
-
-            List<String> eventIDs = new ArrayList<>();
-            String earliestEvent = "N/A";
-            LocalDateTime earliestDue = LocalDateTime.of(2999, 10, 10, 10, 30);
-            if (includeRecurring) {
-                for (String recurringID : con.getRecurringCourseEvents(id)) {
-                    eventIDs.addAll(con.getRecurringEventInstances(recurringID));
-                }
-            }
-            eventIDs.addAll(con.getOneTimeCourseEvents(id));
-
-            // find the earliest event
-            for (String eventID : eventIDs) {
-                LocalDateTime thisDueDate = con.getEventDueDate(eventID);
-                if (thisDueDate != null && thisDueDate.isBefore(earliestDue) && thisDueDate.isAfter(LocalDateTime.now())) {
-                    earliestDue = thisDueDate;
-                    earliestEvent = con.getEventName(eventID);
-                }
-            }
-            courses.add(new ObservableCourse(con.getCourseName(id), code, id, con.getCourseAverage(id), earliestEvent, earliestDue));
+            courses.add(getObservableCourse(id, code));
         }
 
         return courses;
+    }
+
+    ObservableCourse getObservableCourse(String courseID, String courseCode) {
+        String earliestEvent = "N/A";
+        LocalDateTime earliestDue = LocalDateTime.of(2999, 10, 10, 10, 30);
+        List<String> eventIDs = con.getOneTimeCourseEvents(courseID);
+
+        // find the earliest event
+        for (String eventID : eventIDs) {
+            LocalDateTime thisDueDate = con.getEventDueDate(eventID);
+            if (thisDueDate != null && thisDueDate.isBefore(earliestDue) && thisDueDate.isAfter(LocalDateTime.now())) {
+                earliestDue = thisDueDate;
+                earliestEvent = con.getEventName(eventID);
+            }
+        }
+        return new ObservableCourse(con.getCourseName(courseID), courseCode, courseID, con.getCourseAverage(courseID), earliestEvent, earliestDue);
     }
 
     Map<String, String> getAllCourseInfo() {
@@ -62,33 +57,33 @@ public class PresenterLogic {
     ObservableList<ObservableEvent> getCourseEvents(String courseID, boolean isUpcoming) {
         ObservableList<ObservableEvent> events = FXCollections.observableArrayList();
         List<String> eventIDs = con.getOneTimeCourseEvents(courseID);
-        List<String> recurringIDs = con.getRecurringCourseEvents(courseID);
         String courseCode = con.getCourseCode(courseID);
-        for (String recurringID : recurringIDs) {
-            eventIDs.addAll(con.getRecurringEventInstances(recurringID));
-        }
 
         // TODO: figure out why one-time course events list gets mutated to contain duplicates eventually after reloading
         eventIDs = eventIDs.stream().distinct().collect(Collectors.toList());
         for (String eventID : eventIDs) {
             if (!isUpcoming) {
                 if (LocalDateTime.now().isAfter(con.getEventDueDate(eventID))) {
-                    events.add(new ObservableEvent(con.getEventName(eventID), eventID, courseCode, con.getEventDueDate(eventID), con.getEventGrade(eventID), con.getEventWeight(eventID)));
+                    events.add(new ObservableEvent(con.getEventName(eventID), eventID, courseCode, courseID, con.getEventDueDate(eventID), con.getEventGrade(eventID), con.getEventWeight(eventID)));
                 }
             } else {
                 if (LocalDateTime.now().isBefore(con.getEventDueDate(eventID))) {
-                    events.add(new ObservableEvent(con.getEventName(eventID), eventID, courseCode, con.getEventDueDate(eventID), con.getEventGrade(eventID), con.getEventWeight(eventID)));
+                    events.add(new ObservableEvent(con.getEventName(eventID), eventID, courseCode, courseID, con.getEventDueDate(eventID), con.getEventGrade(eventID), con.getEventWeight(eventID)));
                 }
             }
         }
         return events;
     }
 
-    boolean verifyAndAddCourse(String courseName, String courseCode, String[] eventNames, String[] marks, Boolean[] recurrings, JFXDatePicker[] dates,
+    String verifyAndAddCourse(String courseName, String courseCode, String[] eventNames, String[] marks, Boolean[] recurrings, JFXDatePicker[] dates,
                                JFXTimePicker[] times, JFXDatePicker[] skipDates, JFXTextField[] occurrences, JFXTextField[] offsets, int rows) {
-        String courseID = con.addCourse(courseName);
+        String courseID;
+        if (!courseName.trim().equals("")) {
+            courseID = con.addCourse(courseName);
+        } else {
+            return "";
+        }
         con.setCourseCode(courseID, courseCode);
-        System.out.println("Processing courses");
         // create the events and add them into the course
         for (int i = 0; i < rows - 1; i++) {
 
@@ -136,7 +131,7 @@ public class PresenterLogic {
                     }
                 } catch (NumberFormatException e) {
                     con.removeCourse(courseID);
-                    return false;
+                    return "";
                 }
                 try {
                     offset = Integer.parseInt(offsets[i].getText());
@@ -144,20 +139,22 @@ public class PresenterLogic {
                     offset = 1;
                 }
                 double itemWeight = (double) Math.round((weight/occurrence) * 100) / 100;
-                String recurringID = con.addRecurringEvent(name, offset, occurrence, dueDate, skip);
-                con.addEventToCourse(courseID, recurringID, true);
-                con.getRecurringEventInstances(recurringID).forEach(item -> con.setEventWeight(item, itemWeight));
+                List<String> eventIDs = con.addRecurringEvent(name, offset, occurrence, dueDate, skip);
+                eventIDs.forEach(item -> {
+                    con.addEventToCourse(courseID, item);
+                    con.setEventWeight(item, itemWeight);
+                });
             }
 
             // one-time event
             else {
                 String eventID = con.addEvent(name);
                 con.setEventDueDate(eventID, dueDate);
-                con.addEventToCourse(courseID, eventID, false);
+                con.addEventToCourse(courseID, eventID);
                 con.setEventWeight(eventID, weight);
             }
         }
-        return true;
+        return courseID;
     }
 
     /**
@@ -192,5 +189,45 @@ public class PresenterLogic {
         }
 
         return eventsMap;
+    }
+
+    void updateEvent(ObservableEvent event,String name, LocalDate dueDate, LocalTime dueTime, String grade, String weight) {
+        String eventID = event.idProperty().get();
+        if (name != null) {
+            con.setEventName(eventID, name);
+            event.setName(name);
+        }
+
+        LocalDate currDate = con.getEventDueDate(eventID).toLocalDate();
+        LocalTime currTime = con.getEventDueDate(eventID).toLocalTime();
+        if (dueDate != null) {
+            currDate = dueDate;
+        }
+        if (dueTime != null) {
+            currTime = dueTime;
+        }
+        LocalDateTime newDueDate = LocalDateTime.of(currDate, currTime);
+        con.setEventDueDate(eventID, newDueDate);
+        event.setDueDate(newDueDate);
+
+        if (grade != null) {
+            con.setEventGrade(eventID, Double.parseDouble(grade));
+            event.setGrade(Double.parseDouble(grade));
+        }
+
+        if (weight != null) {
+            con.setEventWeight(eventID, Double.parseDouble(weight));
+            event.setWeight(Double.parseDouble(weight));
+        }
+    }
+
+    void deleteEvent(ObservableList<ObservableEvent> events, ObservableEvent event) {
+        String eventID = event.idProperty().get();
+        System.out.println(eventID);
+        events.remove(event);
+        con.removeEventFromCourse(event.courseIDProperty().get(), eventID);
+        con.removeEvent(eventID);
+
+        assert (!con.getAllEventInfo().containsKey(eventID)) : "Key is still in EventManager after deletion";
     }
 }

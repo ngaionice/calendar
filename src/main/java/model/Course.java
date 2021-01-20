@@ -9,7 +9,6 @@ public class Course implements Serializable {
 
     private String name;
     private String code;
-    private final List<String> recurring = new ArrayList<>();   // list of recurringIDs
     private final List<String> oneTime = new ArrayList<>();     // list of eventIDs
     private final String UUID;
     private double targetGrade = -1;           // default is -1, if not -1 then it has been set
@@ -27,14 +26,6 @@ public class Course implements Serializable {
 
     void setCode(String code) {
         this.code = code;
-    }
-
-    void addRecurring(String recurringID) {
-        recurring.add(recurringID);
-    }
-
-    void removeRecurring(String recurringID) {
-        this.recurring.remove(recurringID);
     }
 
     void addOneTime(String eventID) {
@@ -60,10 +51,6 @@ public class Course implements Serializable {
 
     String getCode() {
         return code;
-    }
-
-    List<String> getRecurring() {
-        return recurring;
     }
 
     List<String> getOneTime() {

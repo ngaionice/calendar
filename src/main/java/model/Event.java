@@ -11,7 +11,6 @@ public class Event implements Serializable {
     private String name;
     private LocalDateTime dueDate;
     private Duration duration;
-    private String recurringID;
     private final String UUID;
     private double grade = -1;       // defaults to -1 if unset
     private double weight = -1;
@@ -33,10 +32,6 @@ public class Event implements Serializable {
 
     void setDuration(Duration duration) {
         this.duration = duration;
-    }
-
-    void setRecurringID(String recurringID) {
-        this.recurringID = recurringID;
     }
 
     void setGrade(double grade) {
@@ -62,10 +57,6 @@ public class Event implements Serializable {
 
     Duration getDuration() {
         return duration;
-    }
-
-    String getRecurringID() {
-        return recurringID;
     }
 
     /**
