@@ -27,7 +27,7 @@ public class Presenter {
         VBox nav = elements.getNav(sc, content);
 
         content.setTop(elements.getHeader(sc, "Upcoming"));
-        content.setCenter(elements.getEventsPane(sc, logic));
+        content.setCenter(elements.getCalendarPane(sc, logic));
 
         root.setLeft(nav);
         root.setCenter(content);
@@ -35,5 +35,7 @@ public class Presenter {
         return root;
     }
 
-
+    public void exportData() {
+        con.exportData("courses.ser", "events.ser");
+    }
 }

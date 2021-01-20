@@ -4,6 +4,7 @@ import com.jfoenix.controls.*;
 import com.jfoenix.effects.JFXDepthManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -246,8 +247,8 @@ public class PresenterElements {
         upcoming.setItems(logic.getCourseEvents(course.idProperty().get(), true));
         past.setItems(logic.getCourseEvents(course.idProperty().get(), false));
 
-        dueDateCol.setSortType(TableColumn.SortType.DESCENDING);
-        dueDateColU.setSortType(TableColumn.SortType.ASCENDING);
+        upcoming.getSortOrder().add(dueDateColU);
+        past.getSortOrder().add(dueDateCol);
 
         grid.add(infoHeader, 0, 0);
         grid.add(upcoming, 0, 1);
@@ -297,11 +298,12 @@ public class PresenterElements {
         table.getColumns().addAll(items);
         table.setItems(courseData);
 
+        table.getSortOrder().add(codeCol);
+
         JFXButton addCourse = new JFXButton("");
         addCourse.setGraphic(new FontIcon());
         addCourse.setId("add");
         addCourse.getStyleClass().add("animated-option-button");
-
 
         addCourse.setOnAction(click -> {
             JFXDialog addDialog = getCourseCreateDialog(root, 0.8, 0.9);
@@ -566,15 +568,15 @@ public class PresenterElements {
         dueDateCol.prefWidthProperty().bind(table.widthProperty().multiply(0.16));
         weightCol.prefWidthProperty().bind(table.widthProperty().multiply(0.24));
 
-        List<TableColumn<ObservableEvent, ?>> items = new ArrayList<>(Arrays.asList(dueDateCol, codeCol, nameCol, weightCol));
+        List<TableColumn<ObservableEvent, ?>> columns = new ArrayList<>(Arrays.asList(dueDateCol, codeCol, nameCol, weightCol));
         if (!isUpcoming) {
             TableColumn<ObservableEvent, Double> markCol = new TableColumn<>("Mark");
             markCol.setCellValueFactory(new PropertyValueFactory<>("mark"));
             weightCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
             markCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
-            items.add(markCol);
+            columns.add(markCol);
         }
-        items.forEach(item -> {
+        columns.forEach(item -> {
             item.getStyleClass().add("text-col");
             item.setResizable(false);
         });
@@ -585,8 +587,9 @@ public class PresenterElements {
             events.addAll(logic.getCourseEvents(courseID, isUpcoming));
         }
 
-        table.getColumns().addAll(items);
+        table.getColumns().addAll(columns);
         table.setItems(events);
+        table.getSortOrder().add(dueDateCol);
 
         JFXDepthManager.setDepth(table, 1);
 
@@ -745,14 +748,13 @@ public class PresenterElements {
             base.getChildren().addAll(Arrays.asList(circle, text));
             container.getChildren().add(base);
 
-
             // fill in the VBox
             if (events.containsKey(i)) {
                 for (ObservableEvent event : events.get(i)) {
                     HBox item = new HBox();
                     item.setId("calendar-item");
 
-                    Text eventText = new Text(event.courseCodeProperty().get() + " " + event.nameProperty().get());
+                    Label eventText = new Label(event.courseCodeProperty().get() + " " + event.nameProperty().get());
                     eventText.setId("calendar-event");
                     item.getChildren().add(eventText);
                     container.getChildren().add(item);
@@ -814,7 +816,6 @@ public class PresenterElements {
             if (input.isAdded()) {
                 String addedText = input.getText();
                 String newText = input.getControlNewText();
-                System.out.println(newText);
                 if (newText.matches("\\d{1,3}[.]?(\\d{1,2})?")) {
                     return input;
                 }

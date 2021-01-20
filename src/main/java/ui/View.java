@@ -43,4 +43,10 @@ public class View extends Application {
         launch(args);
     }
 
+    @Override
+    public void stop(){
+        System.out.println("Saving data");
+        pr.exportData();
+    }
+
 }

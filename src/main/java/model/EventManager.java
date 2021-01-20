@@ -8,7 +8,7 @@ import java.util.*;
 
 public class EventManager {
 
-    private Map<String, Event> map = new HashMap<>(10);
+    private Map<String, Event> map;
     private Map<String, String> recurringMap = new HashMap<>(10);   // key is recurringID, value is name
 
     // note that there are 2 types of ID here: recurringID and eventID;
@@ -41,7 +41,7 @@ public class EventManager {
         LocalDate currDate = startDate.toLocalDate();
         LocalTime dueTime = startDate.toLocalTime();
         for (int i = suffixStart; i < occurrences + suffixStart; i++) {
-            if (currDate != skipDate) {
+            if (!currDate.equals(skipDate)) {
                 String eventID = addEvent(name + " " + i);
                 setDueDate(eventID, LocalDateTime.of(currDate, dueTime));
                 setRecurringID(eventID, recurringID);

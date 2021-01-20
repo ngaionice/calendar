@@ -17,7 +17,7 @@ public class LocalGateway {
             input.close();
             return data;
         } catch (IOException | ClassNotFoundException i) {
-            System.out.println("An existing Manager could not be read/found, returning a new Manager.");
+            System.out.println("No existing data found.");
             return new HashMap<>(20);
         }
     }
@@ -33,7 +33,7 @@ public class LocalGateway {
             input.close();
             return data;
         } catch (IOException | ClassNotFoundException i) {
-            System.out.println("An existing Manager could not be read/found, returning a new Manager.");
+            System.out.println("No existing data found.");
             return new HashMap<>(20);
         }
     }
