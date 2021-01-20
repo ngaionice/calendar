@@ -119,7 +119,7 @@ public class Controller {
      * @param courseID ID of the course
      * @return list of IDs of one time events that are of the course
      */
-    public List<String> getOneTimeCourseEvents(String courseID) {
+    public List<String> getCourseEvents(String courseID) {
         return courses.getOneTime(courseID);
     }
 

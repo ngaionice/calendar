@@ -9,18 +9,18 @@ import java.time.temporal.ChronoUnit;
 
 public class ObservableEvent {
 
-    private StringProperty name;
+    private final StringProperty name;
     private final StringProperty courseCode;
     private final StringProperty courseID;
-    private StringProperty dueDate;
-    private final StringProperty id;
-    private DoubleProperty grade;
-    private DoubleProperty weight;
-    private IntegerProperty remainingDays;
+    private final StringProperty dueDate;
+    private final StringProperty eventID;
+    private final DoubleProperty grade;
+    private final DoubleProperty weight;
+    private final IntegerProperty remainingDays;
 
-    public ObservableEvent(String name, String id, String courseCode, String courseID, LocalDateTime dueDate, double grade, double weight) {
+    public ObservableEvent(String name, String eventID, String courseCode, String courseID, LocalDateTime dueDate, double grade, double weight) {
         this.name = new SimpleStringProperty(name);
-        this.id = new SimpleStringProperty(id);
+        this.eventID = new SimpleStringProperty(eventID);
         this.courseCode = new SimpleStringProperty(courseCode);
         this.courseID = new SimpleStringProperty(courseID);
         this.dueDate = new SimpleStringProperty(dueDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
@@ -37,8 +37,8 @@ public class ObservableEvent {
         return courseCode;
     }
 
-    public StringProperty idProperty() {
-        return id;
+    public StringProperty eventIDProperty() {
+        return eventID;
     }
 
     public StringProperty courseIDProperty() {

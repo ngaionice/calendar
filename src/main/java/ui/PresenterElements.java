@@ -192,13 +192,11 @@ public class PresenterElements {
         StackPane root = new StackPane();
         root.setPadding(largerMargin);
 
+        AnchorPane anchor = new AnchorPane();
         GridPane grid = new GridPane();
         grid.setPadding(mediumMargin);
         grid.setBackground(testBackground);
         grid.setVgap(12);
-
-        root.getChildren().add(grid);
-        JFXDepthManager.setDepth(grid, 1);
 
         HBox infoHeader = new HBox();
         infoHeader.setAlignment(Pos.BOTTOM_LEFT);
@@ -291,9 +289,29 @@ public class PresenterElements {
         upcoming.getSortOrder().add(dueDateColU);
         past.getSortOrder().add(dueDateCol);
 
+        JFXButton addEvent = new JFXButton();
+        addEvent.setGraphic(new FontIcon());
+        addEvent.setId("add");
+        addEvent.getStyleClass().add("animated-option-button");
+
+        addEvent.setOnAction(click -> {
+            JFXDialog addDialog = getEventCreateDialog(root, course.idProperty().get());
+            root.getChildren().add(addDialog);
+            addDialog.show();
+        });
+
         grid.add(infoHeader, 0, 0);
         grid.add(upcoming, 0, 1);
         grid.add(past, 0, 2);
+
+        JFXNodesList fab = new JFXNodesList();
+        fab.addAnimatedNode(addEvent);
+        setAnchorsCreate(grid, fab);
+        JFXDepthManager.setDepth(anchor, 1);
+
+        anchor.getChildren().add(grid);
+        anchor.getChildren().add(fab);
+        root.getChildren().add(anchor);
 
         return root;
     }
@@ -406,19 +424,19 @@ public class PresenterElements {
 
         HBox[] rows = new HBox[7];
         String[] eventNames = new String[7];
-        String[] marks = new String[7];
+        String[] weights = new String[7];
         Boolean[] recurrings = new Boolean[7];
 
         JFXTextField field1 = getTextField(content, "Event name", 0.3, false);
-        JFXTextField marks1 = getTextField(content, "Weight", 0.08, true);
+        JFXTextField weight = getTextField(content, "Weight", 0.08, true);
         JFXToggleButton button1 = getToggleButton("Recurring?");
 
         field1.textProperty().addListener((observable, oldValue, newValue) -> eventNames[0] = newValue);
-        marks1.textProperty().addListener((observable, oldValue, newValue) -> marks[0] = newValue);
+        weight.textProperty().addListener((observable, oldValue, newValue) -> weights[0] = newValue);
         button1.selectedProperty().addListener((observable, oldValue, newValue) -> recurrings[0] = newValue);
 
         HBox first = new HBox();
-        first.getChildren().addAll(Arrays.asList(field1, marks1, button1));
+        first.getChildren().addAll(Arrays.asList(field1, weight, button1));
         first.setSpacing(16);
         first.setAlignment(Pos.CENTER_LEFT);
 
@@ -431,7 +449,7 @@ public class PresenterElements {
                 JFXTextField nameField = getTextField(content, "Event name", 0.3, false);
                 nameField.textProperty().addListener((observable, oldValue, newValue) -> eventNames[i] = newValue);
                 JFXTextField markField = getTextField(content, "Weight", 0.08, true);
-                markField.textProperty().addListener((observable, oldValue, newValue) -> marks[i] = newValue);
+                markField.textProperty().addListener((observable, oldValue, newValue) -> weights[i] = newValue);
                 JFXToggleButton buttonField = getToggleButton("Recurring?");
                 buttonField.selectedProperty().addListener((observable, oldValue, newValue) -> recurrings[i] = newValue);
 
@@ -534,7 +552,7 @@ public class PresenterElements {
             actions.getChildren().addAll(Arrays.asList(backButtons.get(1), nextButtons.get(2)));
         });
         nextButtons.get(2).setOnAction(event -> {
-            String courseID = logic.verifyAndAddCourse(courseName.get(), courseCode.get(), eventNames, marks, recurrings,
+            String courseID = logic.verifyAndAddCourse(courseName.get(), courseCode.get(), eventNames, weights, recurrings,
                     dates, times, skipDates, occurrences, offsets, grid3.getRowConstraints().size());
             if (!courseID.equals("")) {
                 dialog.close();
@@ -681,6 +699,7 @@ public class PresenterElements {
         grid.add(weightField, 0, 2, 2, 1);
         grid.add(datePicker, 0, 1);
         grid.add(timePicker, 1, 1);
+
         JFXTextField gradeField = null;
         if (!isUpcoming) {
             gradeField = getTextField(content, "Grade", 0.56, true);
@@ -690,15 +709,13 @@ public class PresenterElements {
         HBox actions = new HBox(12);
         actions.setPadding(margin);
 
-        JFXButton save = new JFXButton("SAVE");
-        save.setId("raised-button");
+        JFXButton saveModify = new JFXButton("SAVE");
+        saveModify.setId("raised-button");
         JFXButton delete = new JFXButton("DELETE");
         delete.setId("flat-button");
 
-        actions.getChildren().addAll(Arrays.asList(delete, save));
-
         JFXTextField finalGradeField = gradeField;
-        save.setOnAction(click -> {
+        saveModify.setOnAction(click -> {
             logic.updateEvent(event, nameField.getText(), datePicker.getValue(), timePicker.getValue(), !isUpcoming ? finalGradeField.getText() : null, weightField.getText());
             dialog.close();
         });
@@ -706,6 +723,72 @@ public class PresenterElements {
             logic.deleteEvent(events, event);
             dialog.close();
         });
+
+        actions.getChildren().addAll(Arrays.asList(delete, saveModify));
+
+        layout.setHeading(headerText);
+        layout.setBody(content);
+        layout.setActions(actions);
+
+        layout.prefWidthProperty().bind(root.widthProperty().multiply(0.5));
+        layout.prefHeightProperty().bind(root.heightProperty().multiply(0.8));
+
+        return dialog;
+    }
+
+    JFXDialog getEventCreateDialog(StackPane root, String courseID) {
+        JFXDialogLayout layout = new JFXDialogLayout();
+        JFXDialog dialog = new JFXDialog(root, layout, JFXDialog.DialogTransition.CENTER);
+        layout.setId("event-edit-dialog");
+
+        Text headerText = new Text("Add event");
+        headerText.setId("dialog-header");
+
+        StackPane content = new StackPane();
+        content.setPadding(mediumMargin);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(16);
+        grid.getRowConstraints().addAll(Arrays.asList(new RowConstraints(52), new RowConstraints(52), new RowConstraints(52), new RowConstraints(52), new RowConstraints(52)));
+        content.getChildren().add(grid);
+
+        JFXTextField nameField = getTextField(content, "Name", 0.56, false);
+        JFXTextField weightField = getTextField(content, "Weight", 0.16, true);
+        JFXDatePicker datePicker = getDatePicker(content, "(First) Due date", 0.36);
+        JFXTimePicker timePicker = getTimePicker(content, "Due time", 0.28);
+        JFXTextField offset = getTextField(content, "Offset", 0.12, true);
+        JFXTextField occurrence = getTextField(content, "# of events", 0.12, true);
+        JFXDatePicker skipDate = getDatePicker(content, "Date to skip (optional)", 0.36);
+
+        grid.add(nameField, 0, 0, 2, 1);
+        JFXToggleButton recurring = getToggleButton("Recurring?");
+        grid.add(weightField, 0, 2);
+        grid.add(recurring, 1, 2);
+        grid.add(datePicker, 0, 1);
+        grid.add(timePicker, 1, 1);
+        grid.add(occurrence, 0, 3);
+        grid.add(offset, 1, 3);
+        grid.add(skipDate, 0, 4);
+
+        HBox actions = new HBox(12);
+        actions.setPadding(margin);
+
+        JFXSnackbar confirmation = new JFXSnackbar(root);
+        JFXSnackbar failure = new JFXSnackbar(content);
+
+        JFXButton saveAdd = new JFXButton("SAVE");
+        saveAdd.setId("raised-button");
+        saveAdd.setOnAction(e -> {
+            boolean eventAdded = logic.addEvent(nameField.getText(), weightField.getText(), recurring.selectedProperty().get(), datePicker, timePicker, skipDate, occurrence, offset, courseID);
+            if (eventAdded) {
+                dialog.close();
+                confirmation.enqueue(getSnackbarEvent(root, "Event added, refresh to view the new event", 0.64, 0.08));
+            } else {
+                failure.enqueue(getSnackbarEvent(content, "Invalid data, please try again", 0.64, 0.12));
+            }
+        });
+
+        actions.getChildren().add(saveAdd);
 
         layout.setHeading(headerText);
         layout.setBody(content);
