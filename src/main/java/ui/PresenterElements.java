@@ -4,6 +4,7 @@ import com.jfoenix.controls.*;
 import com.jfoenix.effects.JFXDepthManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -23,6 +24,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.time.temporal.IsoFields;
 import java.time.temporal.TemporalAdjusters;
@@ -116,6 +118,73 @@ public class PresenterElements {
         return box;
     }
 
+    VBox getNav(BorderPane content, JFXPopup popup) {
+        VBox box = new VBox();
+
+        List<JFXButton> mainButtons = Arrays.asList(new JFXButton("Calendar"), new JFXButton("Courses"),
+                new JFXButton("Upcoming"), new JFXButton("Archive"), new JFXButton("Settings"));
+        List<String> buttonIDs = Arrays.asList("calendar", "courses", "upcoming", "archive", "settings");
+
+        for (int i = 0; i < mainButtons.size(); i++) {
+            JFXButton item = mainButtons.get(i);
+
+            item.setMaxSize(Double.MAX_VALUE, 48);
+            item.setPrefHeight(36);
+            item.setPadding(new Insets(0, 8, 0, 8));
+            item.setAlignment(Pos.CENTER_LEFT);
+            item.setGraphic(new FontIcon());
+            item.setGraphicTextGap(16);
+            item.setTextFill(white);
+
+            item.setId(buttonIDs.get(i));
+        }
+
+        Region spacer = new Region();
+        spacer.prefHeightProperty().bind(sc.heightProperty().multiply(0.125));
+
+        mainButtons.get(0).setOnAction(event -> {
+            content.setCenter(getCalendarPane());
+            content.setTop(getSmallLayoutHeader("Calendar", content));
+            popup.hide();
+        });
+
+        mainButtons.get(1).setOnAction(event -> {
+            content.setCenter(getCoursesPane());
+            content.setTop(getSmallLayoutHeader("Courses", content));
+            popup.hide();
+        });
+
+        mainButtons.get(2).setOnAction(event -> {
+            content.setCenter(getEventsPane());
+            content.setTop(getSmallLayoutHeader("Upcoming", content));
+            popup.hide();
+        });
+
+        mainButtons.get(3).setOnAction(event -> {
+            content.setCenter(getArchivePane());
+            content.setTop(getSmallLayoutHeader("Archive", content));
+            popup.hide();
+        });
+
+        mainButtons.get(4).setOnAction(event -> {
+            content.setCenter(getTabPane());
+            content.setTop(getSmallLayoutHeader("Settings", content));
+            popup.hide();
+        });
+
+        box.getChildren().add(spacer);
+        box.getChildren().addAll(mainButtons);
+        box.setMaxHeight(Double.MAX_VALUE);
+        box.setPadding(margin);
+        box.setMinWidth(144);
+        box.prefWidthProperty().bind(content.widthProperty().multiply(0.24));
+        box.prefHeightProperty().bind(content.heightProperty());
+        box.setBackground(testBackground);
+        box.setSpacing(8);
+
+        return box;
+    }
+
     HBox getLargeLayoutHeader(String headerText) {
         HBox root = new HBox();
         root.setBackground(accentBackground);
@@ -129,10 +198,10 @@ public class PresenterElements {
     }
 
     HBox getSmallLayoutHeader(String headerText, BorderPane content) {
-        // TODO: fix this thing, not working yet
+
         HBox root = new HBox();
         root.setBackground(accentBackground);
-        root.prefHeightProperty().bind(sc.heightProperty().multiply(0.07));
+        root.prefHeightProperty().bind(sc.heightProperty().multiply(0.028));
         root.setPadding(largerMargin);
         root.setAlignment(Pos.CENTER_LEFT);
 
@@ -140,9 +209,20 @@ public class PresenterElements {
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         JFXButton navButton = new JFXButton();
-        JFXDrawer drawer = new JFXDrawer();
-        drawer.setSidePane(getNav(content));
-        navButton.setOnAction(event -> drawer.open());
+        navButton.setGraphic(new FontIcon());
+        navButton.setId("nav-button");
+
+        JFXPopup navPopup = new JFXPopup();
+        StackPane stack = new StackPane();
+        VBox nav = getNav(content, navPopup);
+
+        stack.getChildren().add(nav);
+        navPopup.setPopupContent(stack);
+
+        navButton.setOnAction(event -> {
+            navPopup.show(content);
+            System.out.println("Button clicked");
+        });
 
         root.getChildren().add(getTextH2(headerText, "#FFFFFF"));
         root.getChildren().add(spacer);
@@ -270,12 +350,32 @@ public class PresenterElements {
 
         ObservableList<ObservableEvent> upcomingData = logic.getCourseEvents(course.idProperty().get(), true);
 
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        ObservableList<ObservableEvent> eventData = logic.getCourseEvents(course.idProperty().get());
+        FilteredList<ObservableEvent> upcomingData2 = new FilteredList<>(eventData, p -> true);
+        FilteredList<ObservableEvent> pastData2 = new FilteredList<>(eventData, p -> true);
+        upcomingData2.setPredicate(item -> LocalDateTime.now().isBefore(LocalDateTime.parse(item.dueDateProperty().get(), df)));
+        pastData2.setPredicate(item -> LocalDateTime.now().isAfter(LocalDateTime.parse(item.dueDateProperty().get(), df)));
+
         upcoming.setRowFactory(view -> {
             TableRow<ObservableEvent> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && (! row.isEmpty()) ) {
                     ObservableEvent rowData = row.getItem();
-                    JFXDialog editDialog = getEventEditDialog(root, upcomingData, rowData, true);
+                    JFXDialog editDialog = getEventEditDialog(root, eventData, upcomingData2, pastData2, rowData, true);
+                    root.getChildren().add(editDialog);
+                    editDialog.show();
+                }
+            });
+            return row;
+        });
+        past.setRowFactory(view -> {
+            TableRow<ObservableEvent> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (! row.isEmpty()) ) {
+                    ObservableEvent rowData = row.getItem();
+                    JFXDialog editDialog = getEventEditDialog(root, eventData, upcomingData2, pastData2, rowData, false);
                     root.getChildren().add(editDialog);
                     editDialog.show();
                 }
@@ -283,8 +383,8 @@ public class PresenterElements {
             return row;
         });
 
-        upcoming.setItems(upcomingData);
-        past.setItems(logic.getCourseEvents(course.idProperty().get(), false));
+        upcoming.setItems(upcomingData2);
+        past.setItems(pastData2);
 
         upcoming.getSortOrder().add(dueDateColU);
         past.getSortOrder().add(dueDateCol);
@@ -675,7 +775,7 @@ public class PresenterElements {
         return tabs;
     }
 
-    JFXDialog getEventEditDialog(StackPane root, ObservableList<ObservableEvent> events, ObservableEvent event, boolean isUpcoming) {
+    JFXDialog getEventEditDialog(StackPane root, ObservableList<ObservableEvent> events, FilteredList<ObservableEvent> upcomingEvents, FilteredList<ObservableEvent> pastEvents, ObservableEvent event, boolean isUpcoming) {
         JFXDialogLayout layout = new JFXDialogLayout();
         JFXDialog dialog = new JFXDialog(root, layout, JFXDialog.DialogTransition.CENTER);
         layout.setId("event-edit-dialog");
@@ -714,9 +814,13 @@ public class PresenterElements {
         JFXButton delete = new JFXButton("DELETE");
         delete.setId("flat-button");
 
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
         JFXTextField finalGradeField = gradeField;
         saveModify.setOnAction(click -> {
             logic.updateEvent(event, nameField.getText(), datePicker.getValue(), timePicker.getValue(), !isUpcoming ? finalGradeField.getText() : null, weightField.getText());
+            upcomingEvents.setPredicate(item -> LocalDateTime.now().isBefore(LocalDateTime.parse(item.dueDateProperty().get(), df)));
+            pastEvents.setPredicate(item -> LocalDateTime.now().isAfter(LocalDateTime.parse(item.dueDateProperty().get(), df)));
             dialog.close();
         });
         delete.setOnAction(click -> {

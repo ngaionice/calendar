@@ -6,6 +6,7 @@ import javafx.beans.binding.NumberBinding;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.Scene;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
@@ -28,26 +29,26 @@ public class View extends Application {
         primaryStage.show();
 
         pr = new Presenter(scene);
-        root.getChildren().add(pr.getLargeLayout());
 
         NumberBinding currentWidth = primaryStage.widthProperty().add(0);
         IntegerProperty width = new SimpleIntegerProperty();
         width.bind(currentWidth);
 
-        widthTracker = width.greaterThan(750);
+        widthTracker = width.greaterThan(850);
 
-        // only change when it's larger than 750
-//        widthTracker.addListener((observable, oldValue, newValue) -> {
-//            if (!newValue) {
-//                // shift to smaller layout
-//                root.getChildren().clear();
-//                root.getChildren().add(pr.getSmallLayout());
-//            } else {
-//                // shift to larger layout
-//                root.getChildren().clear();
-//                root.getChildren().add(pr.getLargeLayout());
-//            }
-//        });
+        BorderPane contentRoot = pr.getInitialLayout();
+        root.getChildren().add(contentRoot);
+
+        // only change when it's larger than 800
+        widthTracker.addListener((observable, oldValue, newValue) -> {
+            if (!newValue) {
+                // shift to smaller layout
+                pr.setSmallLayout(contentRoot, (BorderPane) contentRoot.getCenter());
+            } else {
+                // shift to larger layout
+                pr.setLargeLayout(contentRoot, (BorderPane) contentRoot.getCenter());
+            }
+        });
     }
 
     public static void main(String[] args) {

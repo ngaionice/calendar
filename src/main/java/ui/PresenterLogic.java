@@ -72,6 +72,17 @@ public class PresenterLogic {
         return events;
     }
 
+    ObservableList<ObservableEvent> getCourseEvents(String courseID) {
+        ObservableList<ObservableEvent> events = FXCollections.observableArrayList();
+        List<String> eventIDs = con.getCourseEvents(courseID);
+        String courseCode = con.getCourseCode(courseID);
+
+        for (String eventID : eventIDs) {
+            events.add(new ObservableEvent(con.getEventName(eventID), eventID, courseCode, courseID, con.getEventDueDate(eventID), con.getEventGrade(eventID), con.getEventWeight(eventID)));
+        }
+        return events;
+    }
+
     String verifyAndAddCourse(String courseName, String courseCode, String[] eventNames, String[] weights, Boolean[] recurrings, JFXDatePicker[] dates,
                                JFXTimePicker[] times, JFXDatePicker[] skipDates, JFXTextField[] occurrences, JFXTextField[] offsets, int rows) {
         String courseID;
@@ -196,9 +207,9 @@ public class PresenterLogic {
         return eventsMap;
     }
 
-    void updateEvent(ObservableEvent event,String name, LocalDate dueDate, LocalTime dueTime, String grade, String weight) {
+    void updateEvent(ObservableEvent event, String name, LocalDate dueDate, LocalTime dueTime, String grade, String weight) {
         String eventID = event.eventIDProperty().get();
-        if (name != null) {
+        if (name != null && !name.isEmpty()) {
             con.setEventName(eventID, name);
             event.setName(name);
         }
@@ -215,12 +226,12 @@ public class PresenterLogic {
         con.setEventDueDate(eventID, newDueDate);
         event.setDueDate(newDueDate);
 
-        if (grade != null) {
+        if (grade != null && !grade.isEmpty()) {
             con.setEventGrade(eventID, Double.parseDouble(grade));
             event.setGrade(Double.parseDouble(grade));
         }
 
-        if (weight != null) {
+        if (weight != null && !weight.isEmpty()) {
             con.setEventWeight(eventID, Double.parseDouble(weight));
             event.setWeight(Double.parseDouble(weight));
         }
