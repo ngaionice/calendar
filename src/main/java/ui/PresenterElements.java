@@ -20,7 +20,6 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
-import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextBoundsType;
 import javafx.util.Duration;
@@ -44,20 +43,16 @@ public class PresenterElements {
     Scene sc;
     PresenterLogic logic;
 
-    Background testBackground = new Background(new BackgroundFill(Color.rgb(27, 27, 27), CornerRadii.EMPTY, Insets.EMPTY));
-    Background accentBackground = new Background(new BackgroundFill(Color.rgb(255, 152, 0), CornerRadii.EMPTY, Insets.EMPTY));
-    Background accentButtonBackground = new Background(new BackgroundFill(Color.rgb(255, 152, 0), new CornerRadii(3), Insets.EMPTY));
     Background whiteLightBackground = new Background(new BackgroundFill(Color.rgb(238, 238, 238), new CornerRadii(3), Insets.EMPTY));
 
     Insets margin = new Insets(8);
     Insets mediumMargin = new Insets(16);
     Insets largerMargin = new Insets(24);
 
-    Paint white = Paint.valueOf("#FFFFFF");
-    Paint focus = Paint.valueOf("#FF9800");
-    Paint focusLight = Paint.valueOf("#FFB74D");
-    Paint whiteLight = Paint.valueOf("#EEEEEE");
-    Paint gray = Paint.valueOf("#4D4D4D");
+    enum ButtonType {
+        FLOATING,
+        FLOATING_SUB
+    }
 
     public PresenterElements(Scene sc, PresenterLogic logic) {
         this.sc = sc;
@@ -66,22 +61,15 @@ public class PresenterElements {
 
     VBox getNav(BorderPane content) {
         VBox box = new VBox();
+        box.setId("nav-box");
 
         List<JFXButton> mainButtons = Arrays.asList(new JFXButton("Calendar"), new JFXButton("Courses"),
                 new JFXButton("Upcoming"), new JFXButton("Archive"), new JFXButton("Settings"));
-        List<String> buttonIDs = Arrays.asList("calendar", "courses", "upcoming", "archive", "settings");
+        List<String> buttonIDs = Arrays.asList("nav-calendar", "nav-courses", "nav-upcoming", "nav-archive", "nav-settings");
 
         for (int i = 0; i < mainButtons.size(); i++) {
             JFXButton item = mainButtons.get(i);
-
-            item.setMaxSize(Double.MAX_VALUE, 48);
-            item.setPrefHeight(36);
-            item.setPadding(new Insets(0, 8, 0, 8));
-            item.setAlignment(Pos.CENTER_LEFT);
             item.setGraphic(new FontIcon());
-            item.setGraphicTextGap(16);
-            item.setTextFill(white);
-
             item.setId(buttonIDs.get(i));
         }
 
@@ -92,22 +80,18 @@ public class PresenterElements {
             content.setCenter(getCalendarPane());
             content.setTop(getLargeLayoutHeader("Calendar"));
         });
-
         mainButtons.get(1).setOnAction(event -> {
             content.setCenter(getCoursesPane());
             content.setTop(getLargeLayoutHeader("Courses"));
         });
-
         mainButtons.get(2).setOnAction(event -> {
             content.setCenter(getEventsPane());
             content.setTop(getLargeLayoutHeader("Upcoming"));
         });
-
         mainButtons.get(3).setOnAction(event -> {
             content.setCenter(getArchivePane());
             content.setTop(getLargeLayoutHeader("Archive"));
         });
-
         mainButtons.get(4).setOnAction(event -> {
             content.setCenter(getTabPane());
             content.setTop(getLargeLayoutHeader("Settings"));
@@ -115,33 +99,22 @@ public class PresenterElements {
 
         box.getChildren().add(spacer);
         box.getChildren().addAll(mainButtons);
-        box.setMaxHeight(Double.MAX_VALUE);
-        box.setPadding(margin);
         box.prefWidthProperty().bind(sc.widthProperty().multiply(0.15));
-        box.setBackground(testBackground);
-        box.setSpacing(8);
 
         return box;
     }
 
     VBox getNav(BorderPane content, JFXPopup popup) {
         VBox box = new VBox();
+        box.setId("nav-box-popup");
 
         List<JFXButton> mainButtons = Arrays.asList(new JFXButton("Calendar"), new JFXButton("Courses"),
                 new JFXButton("Upcoming"), new JFXButton("Archive"), new JFXButton("Settings"));
-        List<String> buttonIDs = Arrays.asList("calendar", "courses", "upcoming", "archive", "settings");
+        List<String> buttonIDs = Arrays.asList("nav-calendar", "nav-courses", "nav-upcoming", "nav-archive", "nav-settings");
 
         for (int i = 0; i < mainButtons.size(); i++) {
             JFXButton item = mainButtons.get(i);
-
-            item.setMaxSize(Double.MAX_VALUE, 48);
-            item.setPrefHeight(36);
-            item.setPadding(new Insets(0, 8, 0, 8));
-            item.setAlignment(Pos.CENTER_LEFT);
             item.setGraphic(new FontIcon());
-            item.setGraphicTextGap(16);
-            item.setTextFill(white);
-
             item.setId(buttonIDs.get(i));
         }
 
@@ -153,25 +126,21 @@ public class PresenterElements {
             content.setTop(getSmallLayoutHeader("Calendar", content));
             popup.hide();
         });
-
         mainButtons.get(1).setOnAction(event -> {
             content.setCenter(getCoursesPane());
             content.setTop(getSmallLayoutHeader("Courses", content));
             popup.hide();
         });
-
         mainButtons.get(2).setOnAction(event -> {
             content.setCenter(getEventsPane());
             content.setTop(getSmallLayoutHeader("Upcoming", content));
             popup.hide();
         });
-
         mainButtons.get(3).setOnAction(event -> {
             content.setCenter(getArchivePane());
             content.setTop(getSmallLayoutHeader("Archive", content));
             popup.hide();
         });
-
         mainButtons.get(4).setOnAction(event -> {
             content.setCenter(getTabPane());
             content.setTop(getSmallLayoutHeader("Settings", content));
@@ -180,37 +149,25 @@ public class PresenterElements {
 
         box.getChildren().add(spacer);
         box.getChildren().addAll(mainButtons);
-        box.setMaxHeight(Double.MAX_VALUE);
-        box.setPadding(margin);
-        box.setMinWidth(144);
         box.prefWidthProperty().bind(content.widthProperty().multiply(0.24));
         box.prefHeightProperty().bind(content.heightProperty());
-        box.setBackground(testBackground);
-        box.setSpacing(8);
 
         return box;
     }
 
     HBox getLargeLayoutHeader(String headerText) {
         HBox root = new HBox();
-        root.setBackground(accentBackground);
+        root.setId("header-box-large");
         root.prefHeightProperty().bind(sc.heightProperty().multiply(0.07));
-        root.setPadding(largerMargin);
-        root.setAlignment(Pos.CENTER_LEFT);
-
-        root.getChildren().add(getTextH2(headerText, "#FFFFFF"));
-
+        root.getChildren().add(getTextH2(headerText));
         return root;
     }
 
     HBox getSmallLayoutHeader(String headerText, BorderPane content) {
 
         HBox root = new HBox();
-        root.setBackground(accentBackground);
+        root.setId("header-box-small");
         root.prefHeightProperty().bind(sc.heightProperty().multiply(0.028));
-        root.setPadding(largerMargin);
-        root.setAlignment(Pos.BASELINE_LEFT);
-        root.setSpacing(16);
 
         JFXButton navButton = new JFXButton();
         navButton.setGraphic(new FontIcon());
@@ -226,7 +183,7 @@ public class PresenterElements {
         navButton.setOnAction(event -> navPopup.show(content));
 
         root.getChildren().add(navButton);
-        root.getChildren().add(getTextH2(headerText, "#FFFFFF"));
+        root.getChildren().add(getTextH2(headerText));
 
         return root;
     }
@@ -274,9 +231,7 @@ public class PresenterElements {
 
         AnchorPane anchor = new AnchorPane();
         GridPane grid = new GridPane();
-        grid.setPadding(mediumMargin);
-        grid.setBackground(testBackground);
-        grid.setVgap(12);
+        grid.setId("course-content-grid");
 
         HBox infoHeader = new HBox();
         infoHeader.setAlignment(Pos.BOTTOM_LEFT);
@@ -314,7 +269,7 @@ public class PresenterElements {
 
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
         dueDateCol.setCellValueFactory(new PropertyValueFactory<>("dueDate"));
-        gradeCol.setCellValueFactory(new PropertyValueFactory<>("mark"));
+        gradeCol.setCellValueFactory(new PropertyValueFactory<>("grade"));
         weightCol.setCellValueFactory(new PropertyValueFactory<>("weight"));
 
         nameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.56));
@@ -338,21 +293,6 @@ public class PresenterElements {
         upcomingData.setPredicate(item -> LocalDateTime.now().isBefore(LocalDateTime.parse(item.dueDateProperty().get(), df)));
         pastData.setPredicate(item -> LocalDateTime.now().isAfter(LocalDateTime.parse(item.dueDateProperty().get(), df)));
 
-        table.setRowFactory(view -> {
-            TableRow<ObservableEvent> row = new TableRow<>();
-            row.setOnMouseClicked(event -> {
-                if (event.getClickCount() == 2 && (!row.isEmpty())) {
-                    ObservableEvent rowData = row.getItem();
-                    JFXDialog editDialog = getEventEditDialog(root, eventData, upcomingData, pastData, rowData, true);
-                    root.getChildren().add(editDialog);
-                    editDialog.show();
-                }
-            });
-            return row;
-        });
-        table.setItems(upcomingData);
-        table.getSortOrder().add(dueDateCol);
-
         HBox eventSelectionBox = new HBox();
         eventSelectionBox.setSpacing(12);
         eventSelectionBox.setAlignment(Pos.BASELINE_LEFT);
@@ -375,6 +315,21 @@ public class PresenterElements {
         }));
 
         eventSelectionBox.getChildren().addAll(eventSelectionText, eventSelection);
+
+        table.setRowFactory(view -> {
+            TableRow<ObservableEvent> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                    ObservableEvent rowData = row.getItem();
+                    JFXDialog editDialog = getEventEditDialog(root, eventData, upcomingData, pastData, rowData, eventSelection.valueProperty().get().equals("Upcoming"));
+                    root.getChildren().add(editDialog);
+                    editDialog.show();
+                }
+            });
+            return row;
+        });
+        table.setItems(upcomingData);
+        table.getSortOrder().add(dueDateCol);
 
         JFXButton addEvent = new JFXButton();
         addEvent.setGraphic(new FontIcon());
@@ -418,25 +373,12 @@ public class PresenterElements {
 
         ObservableMap<ObservableCourse, BooleanProperty> checkedRows = FXCollections.observableHashMap();
 
-        TableColumn<ObservableCourse, Void> checkCol = new TableColumn<>();
-        TableColumn<ObservableCourse, String> codeCol = new TableColumn<>("Course code");
-        TableColumn<ObservableCourse, String> nameCol = new TableColumn<>("Course name");
-        TableColumn<ObservableCourse, Double> avgCol = new TableColumn<>("Average");
-        TableColumn<ObservableCourse, String> nextEventCol = new TableColumn<>("Next event");
-        TableColumn<ObservableCourse, Double> nextDueCol = new TableColumn<>("Due date");
-
-        codeCol.setCellValueFactory(new PropertyValueFactory<>("code"));
-        nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
-        avgCol.setCellValueFactory(new PropertyValueFactory<>("avg"));
-        nextEventCol.setCellValueFactory(new PropertyValueFactory<>("nextEvent"));
-        nextDueCol.setCellValueFactory(new PropertyValueFactory<>("nextDue"));
-
-        checkCol.prefWidthProperty().bind(table.widthProperty().multiply(0.06));
-        codeCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
-        nameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.28));
-        nextEventCol.prefWidthProperty().bind(table.widthProperty().multiply(0.28));
-        nextDueCol.prefWidthProperty().bind(table.widthProperty().multiply(0.16));
-        avgCol.prefWidthProperty().bind(table.widthProperty().multiply(0.10));
+        TableColumn<ObservableCourse, Void> checkCol = getTableColumn("", "", table, 0.06);
+        TableColumn<ObservableCourse, String> codeCol = getTableColumn("Course code", "code", table, 0.12);
+        TableColumn<ObservableCourse, String> nameCol = getTableColumn("Course name", "name", table, 0.28);
+        TableColumn<ObservableCourse, Double> avgCol = getTableColumn("Average", "avg", table, 0.10);
+        TableColumn<ObservableCourse, String> nextEventCol = getTableColumn("Next event", "nextEvent", table, 0.28);
+        TableColumn<ObservableCourse, Double> nextDueCol = getTableColumn("Due date", "nextDue", table, 0.16);
 
         List<TableColumn<ObservableCourse, ?>> items = new ArrayList<>(isArchived ?
                 Arrays.asList(codeCol, nameCol, avgCol) :
@@ -460,6 +402,7 @@ public class PresenterElements {
         checkCol.setGraphic(checkAll);
         checkCol.setEditable(true);
         checkCol.getStyleClass().add("checkbox-col");
+        checkCol.setSortable(false);
 
         checkCol.setCellFactory(CheckBoxTableCell.forTableColumn(i ->
                 checkedRows.computeIfAbsent(table.getItems().get(i), p -> new SimpleBooleanProperty())));
@@ -477,30 +420,11 @@ public class PresenterElements {
             }
         });
 
-        JFXButton editCourse = new JFXButton("");
-        editCourse.setGraphic(new FontIcon());
-        editCourse.setId("edit");
-        editCourse.getStyleClass().add("animated-option-button");
-
-        JFXButton addCourse = new JFXButton("");
-        addCourse.setGraphic(new FontIcon());
-        addCourse.setId("add");
-        addCourse.getStyleClass().add("animated-option-button-sub");
-
-        JFXButton archiveCourse = new JFXButton("");
-        archiveCourse.setGraphic(new FontIcon());
-        archiveCourse.setId("archive-action");
-        archiveCourse.getStyleClass().add("animated-option-button-sub");
-
-        JFXButton unArchiveCourse = new JFXButton("");
-        unArchiveCourse.setGraphic(new FontIcon());
-        unArchiveCourse.setId("un-archive-action");
-        unArchiveCourse.getStyleClass().add("animated-option-button-sub");
-
-        JFXButton deleteCourse = new JFXButton("");
-        deleteCourse.setGraphic(new FontIcon());
-        deleteCourse.setId("delete");
-        deleteCourse.getStyleClass().add("animated-option-button-sub");
+        JFXButton editCourse = getJFXButton(new FontIcon(), "edit", ButtonType.FLOATING);
+        JFXButton addCourse = getJFXButton(new FontIcon(), "add", ButtonType.FLOATING_SUB);
+        JFXButton archiveCourse = getJFXButton(new FontIcon(), "archive-action", ButtonType.FLOATING_SUB);
+        JFXButton unArchiveCourse = getJFXButton(new FontIcon(), "un-archive-action", ButtonType.FLOATING_SUB);
+        JFXButton deleteCourse = getJFXButton(new FontIcon(), "delete", ButtonType.FLOATING_SUB);
 
         addCourse.setOnAction(action -> {
             JFXDialog addDialog = getCourseCreateDialog(courseData, root, 0.8, 0.9);
@@ -705,7 +629,7 @@ public class PresenterElements {
                 Region spacer = new Region();
                 HBox.setHgrow(spacer, Priority.ALWAYS);
 
-                box.getChildren().addAll(Arrays.asList(getTextNormal(eventNames[i], white),
+                box.getChildren().addAll(Arrays.asList(getTextNormal(eventNames[i]),
                         spacer, dates[i], times[i]));
                 if (isRecurring) {
                     skipDates[i] = getDatePicker(content, "Skip date (optional)", 0.28);
@@ -1010,8 +934,7 @@ public class PresenterElements {
         assert (numberOfRows.get() > 0) : "Row number <= 0.";
 
         GridPane grid = new GridPane();
-        grid.setPadding(mediumMargin);
-        grid.setBackground(testBackground);
+        grid.setId("calendar-grid");
         grid.setAlignment(Pos.CENTER);
 
         HBox header = new HBox();
@@ -1111,12 +1034,12 @@ public class PresenterElements {
 
             StackPane base = new StackPane();
             Circle circle = new Circle(12);
-            Text text = getTextNormal(String.valueOf(i), white);
+            Text text = getTextNormal(String.valueOf(i));
             text.setBoundsType(TextBoundsType.VISUAL);
             if (LocalDate.of(date.getYear(), date.getMonth().getValue(), i).equals(LocalDate.now())) {
-                circle.setFill(focus);
+                circle.setId("calendar-circle-today");
             } else {
-                circle.setFill(Paint.valueOf("#1b1b1b"));
+                circle.setId("calendar-circle-regular");
             }
             base.getChildren().addAll(Arrays.asList(circle, text));
             container.getChildren().add(base);
@@ -1225,8 +1148,6 @@ public class PresenterElements {
 
     JFXDatePicker getDatePicker(StackPane root, String promptText, double bindRatio) {
         JFXDatePicker date = new JFXDatePicker();
-        date.setDefaultColor(focus);
-        date.setOverLay(true);
         date.setDialogParent(root);
         date.setId("date-picker");
         date.setPromptText(promptText);
@@ -1237,8 +1158,6 @@ public class PresenterElements {
 
     JFXTimePicker getTimePicker(StackPane root, String promptText, double bindRatio) {
         JFXTimePicker time = new JFXTimePicker();
-        time.setDefaultColor(focus);
-        time.set24HourView(true);
         time.setOverLay(true);
         time.setDialogParent(root);
         time.setId("time-picker");
@@ -1250,7 +1169,6 @@ public class PresenterElements {
 
     JFXComboBox<String> getComboBox(StackPane root, String promptText, double bindRatio) {
         JFXComboBox<String> combos = new JFXComboBox<>();
-        combos.setFocusColor(focus);
         combos.setPromptText(promptText);
         combos.prefWidthProperty().bind(root.widthProperty().multiply(bindRatio));
 
@@ -1259,10 +1177,6 @@ public class PresenterElements {
 
     JFXToggleButton getToggleButton(String text) {
         JFXToggleButton button = new JFXToggleButton();
-        button.setToggleColor(focus);
-        button.setUnToggleColor(white);
-        button.setToggleLineColor(focusLight);
-        button.setUnToggleLineColor(whiteLight);
         button.setSize(9);
         button.setText(text);
 
@@ -1271,18 +1185,15 @@ public class PresenterElements {
 
     // misc and text
 
-    Text getTextH2(String string, String color) {
+    Text getTextH2(String string) {
         Text text = new Text(string);
-        text.setFont(Font.font("Roboto Medium", 15));
-        text.setFill(Paint.valueOf(color));
+        text.setId("text-h2");
         return text;
     }
 
-    Text getTextNormal(String string, Paint color) {
+    Text getTextNormal(String string) {
         Text text = new Text(string);
-        text.setFont(Font.font("Roboto Regular", 12));
-        text.setFill(color);
-
+        text.setId("text-normal");
         return text;
     }
 
@@ -1308,5 +1219,26 @@ public class PresenterElements {
         content.setId("snackbar");
 
         return new JFXSnackbar.SnackbarEvent(content, Duration.seconds(3.33), null);
+    }
+
+    JFXButton getJFXButton(Node graphic, String cssID, ButtonType buttonType) {
+        JFXButton button = new JFXButton("");
+        button.setGraphic(graphic);
+        button.setId(cssID);
+        if (buttonType.equals(ButtonType.FLOATING)) {
+            button.getStyleClass().add("animated-option-button");
+        } else if (buttonType.equals(ButtonType.FLOATING_SUB)) {
+            button.getStyleClass().add("animated-option-button-sub");
+        }
+        return button;
+    }
+
+    <S, T> TableColumn<S, T> getTableColumn(String headerText, String propertyValue, Region widthBinder, double widthBoundRatio) {
+        TableColumn<S, T> column = headerText.equals("") ? new TableColumn<>() : new TableColumn<>(headerText);
+        if (!propertyValue.equals("")) {
+            column.setCellValueFactory(new PropertyValueFactory<>(propertyValue));
+        }
+        column.prefWidthProperty().bind(widthBinder.widthProperty().multiply(widthBoundRatio));
+        return column;
     }
 }

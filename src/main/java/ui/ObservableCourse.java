@@ -15,13 +15,22 @@ public class ObservableCourse {
     private final StringProperty nextDue;
     private final StringProperty id;
 
-    public ObservableCourse(String name, String code, String id, double avg, String nextEvent, Optional<LocalDateTime> nextDue) {
+    public ObservableCourse(String name, String code, String id, double avg, String nextEvent, LocalDateTime nextDue) {
         this.name = new SimpleStringProperty(name);
         this.code = new SimpleStringProperty(code);
         this.id = new SimpleStringProperty(id);
         this.avg = new SimpleDoubleProperty(avg);
         this.nextEvent = new SimpleStringProperty(nextEvent);
-        this.nextDue = new SimpleStringProperty(nextDue.map(localDateTime -> localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))).orElse("N/A"));
+        this.nextDue = new SimpleStringProperty(nextDue.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+    }
+
+    public ObservableCourse(String name, String code, String id, double avg) {
+        this.name = new SimpleStringProperty(name);
+        this.code = new SimpleStringProperty(code);
+        this.id = new SimpleStringProperty(id);
+        this.avg = new SimpleDoubleProperty(avg);
+        this.nextEvent = new SimpleStringProperty("N/A");
+        this.nextDue = new SimpleStringProperty("N/A");
     }
 
     public StringProperty nameProperty() {

@@ -28,16 +28,14 @@
 }
 
 .root {
-    -fx-base: BLACK;
     -fx-color: -fx-base;
-
     -fx-accent: #FF9800;
+    -fx-accent-light: #FFC947;
     -fx-font-family: Roboto Regular;
 }
 
 .table-view,
 .table-view:focused {
-    -fx-background-color: #1B1B1B;
     -fx-border-color: TRANSPARENT;
 }
 
@@ -45,33 +43,18 @@
     -fx-background-insets: 0, 1;
 }
 
-.table-view .column-header,
-.table-view .column-header .filler,
-.table-view .column-header-background .filler {
-    -fx-background-color: #1B1B1B;
-}
 
 .table-view .table-cell {
     -fx-font-family: Roboto Regular;
-    -fx-text-fill: #eeeeee ;
 }
 
 .table-view .table-row-cell {
-    -fx-background-color: #1B1B1B ;
     -fx-border-width: 1 0 0 0;
-    -fx-border-color: #424242;
+    -fx-table-cell-border-color: transparent;
 }
 
 .table-view .column-header .label {
-    -fx-text-fill: #C7C7C7;
-    -fx-font-weight: bold;
-}
-
-.table-view .column-header,
-.table-view .column-header .filler,
-.table-view .column-header-background,
-.table-view .column-header-background .filler {
-    -fx-background-color: #1B1B1B;
+    -fx-font-family: "Roboto Medium";
 }
 
 .table-view .column-header,
@@ -80,15 +63,7 @@
     -fx-border-insets: 0 10 1 0;
 }
 
-.table-view .column-header .label {
-    -fx-text-fill: #FFF;
-    -fx-font-family: "Roboto Medium";
-}
-
-.table-view:focused .table-row-cell:focused {
-    -fx-background-insets: 0 0 0 0;
-}
-
+.table-view:focused .table-row-cell:focused,
 .table-view:focused .table-row-cell:selected {
     -fx-background-color: transparent;
     -fx-background-insets: 0 0 0 0;
@@ -102,10 +77,6 @@
     -fx-min-height: 0;
     -fx-pref-height: 0;
     -fx-max-height: 0;
-}
-
-.table-row-cell {
-    -fx-table-cell-border-color: transparent;
 }
 
 .text-col,
@@ -125,73 +96,64 @@ Note that to shift tabs left/right, both the 2nd value and 4th value have to be 
     -fx-padding: 0 -9 0 9;
 }
 
-.jfx-tab-pane .tab-header-area .jfx-rippler{
-    -jfx-rippler-fill: #FFFFFF;
-}
-
 .jfx-tab-pane .tab-selected-line {
-    -fx-background-color: #FFFFFF;
     -fx-stroke-width: 3pt;
 }
 
-.jfx-tab-pane .headers-region {
-    -fx-background-color: #FF9800;
-    -fx-text-fill: WHITE;
-}
-
+.jfx-tab-pane .headers-region,
 .jfx-tab-pane .tab-header-background {
-    -fx-background-color: #FF9800;
+    -fx-background-color: -fx-accent;
 }
 
 .jfx-tab-pane .tab .tab-label {
     -fx-font-weight: normal;
-    -fx-text-fill: #EEEEEE;
     -fx-font-size: 12;
 }
 
-.jfx-tab-pane .tab:selected .tab-label {
-    -fx-text-fill: #FFFFFF;
-}
-
-#calendar .ikonli-font-icon {
+#nav-calendar .ikonli-font-icon {
     -fx-icon-code: "mdi-calendar";
 }
 
-#courses .ikonli-font-icon {
+#nav-courses .ikonli-font-icon {
     -fx-icon-code: "mdi-file-document-box";
 }
 
-#upcoming .ikonli-font-icon {
+#nav-upcoming .ikonli-font-icon {
     -fx-icon-code: "mdi-label";
 }
 
-#archive .ikonli-font-icon {
+#nav-archive .ikonli-font-icon {
     -fx-icon-code: "mdi-archive";
 }
 
-#settings .ikonli-font-icon {
+#nav-settings .ikonli-font-icon {
     -fx-icon-code: "mdi-settings";
 }
 
 
-#calendar .ikonli-font-icon,
-#courses .ikonli-font-icon,
-#upcoming .ikonli-font-icon,
-#archive .ikonli-font-icon,
-#settings .ikonli-font-icon {
-    -fx-icon-color: white;
+#nav-calendar .ikonli-font-icon,
+#nav-courses .ikonli-font-icon,
+#nav-upcoming .ikonli-font-icon,
+#nav-archive .ikonli-font-icon,
+#nav-settings .ikonli-font-icon {
     -fx-icon-size: 13px;
 }
 
-#calendar, #courses, #upcoming,
-#archive, #settings {
+#nav-calendar, #nav-courses, #nav-upcoming,
+#nav-archive, #nav-settings {
     -fx-font-size: 13px;
     -fx-font-family: "Roboto Regular";
+    -fx-max-height: 48;
+    -fx-pref-height: 36;
+    -fx-max-width: 5000;
+    -fx-text-fill: -fx-content;
+    -fx-graphic-text-gap: 16;
+    -fx-alignment: center-left;
+    -fx-padding: 0 8 0 8;
 }
 
 #add-button .ikonli-font-icon {
     -fx-icon-code: "mdi-plus-box";
-    -fx-icon-color: white;
     -fx-icon-size: 15px;
 }
 
@@ -207,7 +169,6 @@ floating buttons
 #archive-action .ikonli-font-icon,
 #un-archive-action .ikonli-font-icon,
 #delete .ikonli-font-icon {
-    -fx-icon-color: white;
     -fx-icon-size: 20px;
 }
 
@@ -237,7 +198,6 @@ floating buttons
 
 #add-event .ikonli-font-icon {
     -fx-icon-code: "mdi-plus-box";
-    -fx-icon-color: white;
     -fx-icon-size: 15px;
 }
 
@@ -253,18 +213,11 @@ floating buttons
     -fx-icon-code: "mdi-menu";
 }
 
-.jfx-text-field {
-    -jfx-focus-color: #FF9800;
-    -fx-text-fill: #FFF;
-}
-
+.jfx-text-field,
 .jfx-combo-box {
     -jfx-focus-color: -fx-accent;
 }
 
-.jfx-combo-box .jfx-rippler {
-    -jfx-rippler-fill: white;
-}
 
 #time-picker .jfx-time-picker {
     -fx-border-color: transparent;
@@ -283,11 +236,11 @@ floating buttons
 }
 
 .animated-option-button {
-    -fx-background-color: #FF9800;
+    -fx-background-color: -fx-accent;
 }
 
 .animated-option-button-sub {
-    -fx-background-color: #FFC947;
+    -fx-background-color: -fx-accent-light;
 }
 
 #left-button,
@@ -307,20 +260,6 @@ floating buttons
     -jfx-rippler-fill: -fx-accent;
 }
 
-#nav-button .jfx-rippler {
-    -jfx-rippler-fill: white;
-}
-
-.animated-option-button .jfx-rippler,
-.animated-option-button-sub .jfx-rippler{
-    -jfx-rippler-fill: #FFF;
-}
-
-#course-create-dialog,
-#event-edit-dialog {
-    -fx-background-color: #212121;
-}
-
 .date-picker-popup .calendar-grid {
     -fx-pref-width: 180.0;
     -fx-pref-height: 120.0;
@@ -337,15 +276,7 @@ floating buttons
 }
 
 #raised-button {
-    -fx-background-color: #FF9800;
-}
-
-#flat-button {
-    -fx-text-fill: white;
-}
-
-#warning-flat-button {
-    -fx-text-fill: #F44336;
+    -fx-background-color: -fx-accent;
 }
 
 #add-nav-button {
@@ -357,13 +288,11 @@ floating buttons
 #dialog-header {
     -fx-font-family: "Roboto Medium";
     -fx-font-size: 14px;
-    -fx-fill: white;
 }
 
 #dialog-subheader {
     -fx-font-family: "Roboto Medium";
     -fx-font-size: 13px;
-    -fx-fill: white;
 }
 
 #snackbar {
@@ -374,25 +303,21 @@ floating buttons
 #content-header {
     -fx-font-family: "Roboto Medium";
     -fx-font-size: 15px;
-    -fx-fill: white;
 }
 
 #content-subheader {
     -fx-font-family: "Roboto Regular";
     -fx-font-size: 13px;
-    -fx-fill: white;
 }
 
 #content-supersize {
     -fx-font-family: "Roboto Medium";
     -fx-font-size: 20px;
-    -fx-fill: white;
 }
 
 #content-content {
     -fx-font-family: "Roboto Regular";
     -fx-font-size: 12px;
-    -fx-fill: white;
 }
 
 #calendar-date {
@@ -411,14 +336,185 @@ floating buttons
     -fx-padding: 2;
 }
 
-#calendar-event {
-    -fx-fill: white;
-}
-
 #calendar-week-header {
     -fx-font-family: "Roboto Medium";
     -fx-font-size: 12px;
-    -fx-fill: white;
 }
+
+#nav-box,
+#nav-box-popup {
+    -fx-padding: 8;
+    -fx-spacing: 8;
+    -fx-background-radius: 3;
+}
+
+#nav-box-popup {
+    -fx-min-width: 144;
+}
+
+
+#course-content-grid,
+#calendar-grid {
+    -fx-background-radius: 3;
+    -fx-padding: 16;
+}
+
+#course-content-grid {
+    -fx-vgap: 12;
+}
+
+#header-box-large,
+#header-box-small {
+    -fx-background-color: -fx-accent;
+    -fx-padding: 24;
+    -fx-spacing: 16;
+}
+
+#header-box-large {
+    -fx-alignment: center-left;
+}
+
+#header-box-small {
+    -fx-alignment: baseline-left;
+}
+
+#text-h2 {
+    -fx-font-family: "Roboto Medium";
+    -fx-font-size: 15;
+}
+
+#text-normal {
+    -fx-font-family: "Roboto Regular";
+    -fx-font-size: 12;
+}
+
+#calendar-circle-today {
+    -fx-fill: -fx-accent;
+}
+
+.jfx-toggle-button {
+    -jfx-toggle-color: -fx-accent;
+    -jfx-toggle-line-color: -fx-accent-light;
+}
+
+.jfx-date-picker,
+.jfx-time-picker {
+    -jfx-default-color: -fx-accent;
+    -jfx-overlay: true;
+}
+
+/* Tables */
+
+.table-view,
+.table-view:focused {
+    -fx-background-color: -fx-material;
+}
+
+.table-view .column-header,
+.table-view .column-header .filler,
+.table-view .column-header-background,
+.table-view .column-header-background .filler,
+.table-view .table-row-cell {
+    -fx-background-color: -fx-material;
+}
+
+.table-view .table-cell,
+.table-view .column-header .label {
+    -fx-text-fill: -fx-content;
+}
+
+.table-view .table-row-cell {
+    -fx-border-color: #424242;
+}
+
+/* Buttons */
+
+#nav-calendar .ikonli-font-icon,
+#nav-courses .ikonli-font-icon,
+#nav-upcoming .ikonli-font-icon,
+#nav-archive .ikonli-font-icon,
+#nav-settings .ikonli-font-icon,
+#add-button .ikonli-font-icon,
+#add .ikonli-font-icon,
+#save .ikonli-font-icon,
+#edit .ikonli-font-icon,
+#left-button .ikonli-font-icon,
+#right-button .ikonli-font-icon,
+#nav-button .ikonli-font-icon,
+#archive-action .ikonli-font-icon,
+#un-archive-action .ikonli-font-icon,
+#delete .ikonli-font-icon,
+#add-event .ikonli-font-icon {
+    -fx-icon-color: -fx-content;
+}
+
+/* General controls */
+
+.jfx-rippler {
+    -jfx-rippler-fill: -fx-content;
+}
+
+.jfx-tab-pane .tab-selected-line {
+    -fx-background-color: -fx-content;
+}
+
+.jfx-tab-pane .headers-region,
+.jfx-tab-pane .tab:selected .tab-label,
+.jfx-text-field {
+    -fx-text-fill: -fx-content;
+}
+
+.jfx-tab-pane .tab .tab-label {
+    -fx-text-fill: -fx-content-light;
+}
+
+#course-create-dialog,
+#event-edit-dialog {
+    -fx-background-color: -fx-dialog-background;
+}
+
+#dialog-header,
+#dialog-subheader,
+#content-header,
+#content-subheader,
+#content-supersize,
+#content-content,
+#calendar-event,
+#calendar-week-header{
+    -fx-fill: -fx-content;
+}
+
+#flat-button {
+    -fx-text-fill: -fx-content;
+}
+
+#nav-box,
+#nav-box-popup {
+    -fx-background-color: -fx-material;
+}
+
+#course-content-grid,
+#calendar-grid {
+    -fx-background-color: -fx-material;
+}
+
+#text-h2 {
+    -fx-fill: -fx-content;
+}
+
+#text-normal {
+    -fx-fill: -fx-content;
+}
+
+#calendar-circle-regular {
+    -fx-fill: -fx-material;
+}
+
+.jfx-toggle-button {
+    -jfx-untoggle-color: -fx-content;
+    -jfx-untoggle-line-color: -fx-content-light;
+}
+
+
 
 

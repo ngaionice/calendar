@@ -152,7 +152,7 @@ public class Controller {
             }
         }
         if (assessedMax != 0) {
-            return assessed / assessedMax;
+            return (assessed / assessedMax) * 100;
         }
         return -1;
     }

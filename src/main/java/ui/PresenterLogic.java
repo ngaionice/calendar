@@ -41,7 +41,6 @@ public class PresenterLogic {
         if (!isArchived) {
             eventIDs = con.getCourseEvents(courseID);
         }
-        System.out.println(eventIDs.size());
 
         // find the earliest event
         for (String eventID : eventIDs) {
@@ -51,8 +50,10 @@ public class PresenterLogic {
                 earliestEvent = con.getEventName(eventID);
             }
         }
-        Optional<LocalDateTime> dueDate = !earliestDue.equals(LocalDateTime.of(2999, 10, 10, 10, 30)) ? Optional.of(earliestDue) : Optional.empty();
-        return new ObservableCourse(con.getCourseName(courseID, isArchived), courseCode, courseID, con.getCourseAverage(courseID), earliestEvent, dueDate);
+        if (!earliestDue.equals(LocalDateTime.of(2999, 10, 10, 10, 30))) {
+            return new ObservableCourse(con.getCourseName(courseID, isArchived), courseCode, courseID, con.getCourseAverage(courseID), earliestEvent, earliestDue);
+        }
+        return new ObservableCourse(con.getCourseName(courseID, isArchived), courseCode, courseID, con.getCourseAverage(courseID));
     }
 
     Map<String, String> getAllCourseInfo(boolean isArchived) {

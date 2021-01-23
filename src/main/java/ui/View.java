@@ -24,6 +24,8 @@ public class View extends Application {
 
         Scene scene = new Scene(root, viewWidth, viewHeight);
         scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/light.css").toExternalForm());
+
 
         primaryStage.setScene(scene);
         primaryStage.show();
