@@ -21,22 +21,27 @@ public class PresenterLogic {
         this.con = con;
     }
 
-    ObservableList<ObservableCourse> getCourses() {
+    ObservableList<ObservableCourse> getCourses(boolean isArchived) {
         ObservableList<ObservableCourse> courses = FXCollections.observableArrayList();
-        Map<String, String> courseInfo = con.getAllCourseInfo();
+        Map<String, String> courseInfo = con.getAllCourseInfo(isArchived);
 
         for (String id : courseInfo.keySet()) {
             String code = courseInfo.get(id);
-            courses.add(getObservableCourse(id, code));
+            courses.add(getObservableCourse(id, code, isArchived));
         }
 
         return courses;
     }
 
-    ObservableCourse getObservableCourse(String courseID, String courseCode) {
+    ObservableCourse getObservableCourse(String courseID, String courseCode, boolean isArchived) {
         String earliestEvent = "N/A";
         LocalDateTime earliestDue = LocalDateTime.of(2999, 10, 10, 10, 30);
-        List<String> eventIDs = con.getCourseEvents(courseID);
+
+        List<String> eventIDs = new ArrayList<>();
+        if (!isArchived) {
+            eventIDs = con.getCourseEvents(courseID);
+        }
+        System.out.println(eventIDs.size());
 
         // find the earliest event
         for (String eventID : eventIDs) {
@@ -46,17 +51,18 @@ public class PresenterLogic {
                 earliestEvent = con.getEventName(eventID);
             }
         }
-        return new ObservableCourse(con.getCourseName(courseID), courseCode, courseID, con.getCourseAverage(courseID), earliestEvent, earliestDue);
+        Optional<LocalDateTime> dueDate = !earliestDue.equals(LocalDateTime.of(2999, 10, 10, 10, 30)) ? Optional.of(earliestDue) : Optional.empty();
+        return new ObservableCourse(con.getCourseName(courseID, isArchived), courseCode, courseID, con.getCourseAverage(courseID), earliestEvent, dueDate);
     }
 
-    Map<String, String> getAllCourseInfo() {
-        return con.getAllCourseInfo();
+    Map<String, String> getAllCourseInfo(boolean isArchived) {
+        return con.getAllCourseInfo(isArchived);
     }
 
     ObservableList<ObservableEvent> getCourseEvents(String courseID, boolean isUpcoming) {
         ObservableList<ObservableEvent> events = FXCollections.observableArrayList();
         List<String> eventIDs = con.getCourseEvents(courseID);
-        String courseCode = con.getCourseCode(courseID);
+        String courseCode = con.getCourseCode(courseID, false);
 
         for (String eventID : eventIDs) {
             if (!isUpcoming) {
@@ -75,7 +81,7 @@ public class PresenterLogic {
     ObservableList<ObservableEvent> getCourseEvents(String courseID) {
         ObservableList<ObservableEvent> events = FXCollections.observableArrayList();
         List<String> eventIDs = con.getCourseEvents(courseID);
-        String courseCode = con.getCourseCode(courseID);
+        String courseCode = con.getCourseCode(courseID, false);
 
         for (String eventID : eventIDs) {
             events.add(new ObservableEvent(con.getEventName(eventID), eventID, courseCode, courseID, con.getEventDueDate(eventID), con.getEventGrade(eventID), con.getEventWeight(eventID)));
@@ -186,7 +192,7 @@ public class PresenterLogic {
 
         // get all the events
         ObservableList<ObservableEvent> events = FXCollections.observableArrayList();
-        Map<String, String> courseInfo = getAllCourseInfo();
+        Map<String, String> courseInfo = getAllCourseInfo(false);
         for (String courseID: courseInfo.keySet()) {
             events.addAll(getCourseEvents(courseID, true));
             events.addAll(getCourseEvents(courseID, false));
@@ -245,5 +251,20 @@ public class PresenterLogic {
         con.removeEvent(eventID);
 
         assert (!con.getAllEventInfo().containsKey(eventID)) : "Key is still in EventManager after deletion";
+    }
+
+    void archiveCourse(ObservableCourse course, ObservableList<ObservableCourse> courses) {
+        courses.remove(course);
+        con.archiveCourse(course.idProperty().get());
+    }
+
+    void unArchiveCourse(ObservableCourse course, ObservableList<ObservableCourse> courses) {
+        courses.remove(course);
+        con.unArchiveCourse(course.idProperty().get());
+    }
+
+    void deleteCourse(ObservableCourse course, ObservableList<ObservableCourse> courses) {
+        courses.remove(course);
+        con.removeCourse(course.idProperty().get());
     }
 }

@@ -2,14 +2,19 @@ package ui;
 
 import com.jfoenix.controls.*;
 import com.jfoenix.effects.JFXDepthManager;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -32,6 +37,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
 public class PresenterElements {
 
@@ -203,10 +209,8 @@ public class PresenterElements {
         root.setBackground(accentBackground);
         root.prefHeightProperty().bind(sc.heightProperty().multiply(0.028));
         root.setPadding(largerMargin);
-        root.setAlignment(Pos.CENTER_LEFT);
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        root.setAlignment(Pos.BASELINE_LEFT);
+        root.setSpacing(16);
 
         JFXButton navButton = new JFXButton();
         navButton.setGraphic(new FontIcon());
@@ -219,14 +223,10 @@ public class PresenterElements {
         stack.getChildren().add(nav);
         navPopup.setPopupContent(stack);
 
-        navButton.setOnAction(event -> {
-            navPopup.show(content);
-            System.out.println("Button clicked");
-        });
+        navButton.setOnAction(event -> navPopup.show(content));
 
-        root.getChildren().add(getTextH2(headerText, "#FFFFFF"));
-        root.getChildren().add(spacer);
         root.getChildren().add(navButton);
+        root.getChildren().add(getTextH2(headerText, "#FFFFFF"));
 
         return root;
     }
@@ -256,9 +256,9 @@ public class PresenterElements {
         tabs.setTabMaxWidth(104);
         tabs.setTabMinHeight(24);
 
-        addTab(tabs, "Overview", getCourseOverviewContent());
+        addTab(tabs, "Overview", getCourseOverviewContent(false));
 
-        ObservableList<ObservableCourse> courses = logic.getCourses();
+        ObservableList<ObservableCourse> courses = logic.getCourses(false);
         courses.sort(Comparator.comparing(o -> o.codeProperty().get()));
 
         for (ObservableCourse course : courses) {
@@ -302,21 +302,12 @@ public class PresenterElements {
         HBox.setHgrow(spacer, Priority.ALWAYS);
         infoHeader.getChildren().addAll(Arrays.asList(courseInfo, spacer, averageInfo));
 
-        TableView<ObservableEvent> upcoming = new TableView<>();
-        upcoming.prefWidthProperty().bind(grid.widthProperty());
-        upcoming.prefHeightProperty().bind(sc.heightProperty().multiply(0.5));
-        upcoming.setFixedCellSize(48);
+        TableView<ObservableEvent> table = new TableView<>();
+        table.prefWidthProperty().bind(grid.widthProperty());
+        table.prefHeightProperty().bind(sc.heightProperty().multiply(0.5));
+        table.setFixedCellSize(48);
 
-        TableView<ObservableEvent> past = new TableView<>();
-        past.prefWidthProperty().bind(grid.widthProperty());
-        past.prefHeightProperty().bind(sc.heightProperty().multiply(0.3));
-        past.setFixedCellSize(48);
-
-        TableColumn<ObservableEvent, String> nameColU = new TableColumn<>("Upcoming events");
-        TableColumn<ObservableEvent, String> dueDateColU = new TableColumn<>("Due date");
-        TableColumn<ObservableEvent, Double> weightColU = new TableColumn<>("Weight");
-
-        TableColumn<ObservableEvent, String> nameCol = new TableColumn<>("Past events");
+        TableColumn<ObservableEvent, String> nameCol = new TableColumn<>("Events");
         TableColumn<ObservableEvent, String> dueDateCol = new TableColumn<>("Due date");
         TableColumn<ObservableEvent, Double> gradeCol = new TableColumn<>("Grade");
         TableColumn<ObservableEvent, Double> weightCol = new TableColumn<>("Weight");
@@ -326,68 +317,64 @@ public class PresenterElements {
         gradeCol.setCellValueFactory(new PropertyValueFactory<>("mark"));
         weightCol.setCellValueFactory(new PropertyValueFactory<>("weight"));
 
-        nameColU.setCellValueFactory(new PropertyValueFactory<>("name"));
-        dueDateColU.setCellValueFactory(new PropertyValueFactory<>("dueDate"));
-        weightColU.setCellValueFactory(new PropertyValueFactory<>("weight"));
+        nameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.56));
+        dueDateCol.prefWidthProperty().bind(table.widthProperty().multiply(0.24));
+        weightCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
+        gradeCol.prefWidthProperty().bind(table.widthProperty().multiply(0.04));
 
-        nameCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.56));
-        dueDateCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.24));
-        weightCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.12));
-        gradeCol.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.04));
-
-        nameColU.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.56));
-        dueDateColU.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.24));
-        weightColU.prefWidthProperty().bind(upcoming.widthProperty().multiply(0.16));
-
-        List<TableColumn<ObservableEvent, ?>> items = Arrays.asList(nameCol, dueDateCol, weightCol, gradeCol, nameColU, dueDateColU, weightColU);
+        List<TableColumn<ObservableEvent, ?>> items = Arrays.asList(nameCol, dueDateCol, weightCol, gradeCol);
         items.forEach(item -> {
             item.getStyleClass().add("text-col");
             item.setResizable(false);
         });
 
-        upcoming.getColumns().addAll(items.subList(4, 7));
-        past.getColumns().addAll(items.subList(0, 4));
-
-        ObservableList<ObservableEvent> upcomingData = logic.getCourseEvents(course.idProperty().get(), true);
+        table.getColumns().addAll(items);
 
         DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
         ObservableList<ObservableEvent> eventData = logic.getCourseEvents(course.idProperty().get());
-        FilteredList<ObservableEvent> upcomingData2 = new FilteredList<>(eventData, p -> true);
-        FilteredList<ObservableEvent> pastData2 = new FilteredList<>(eventData, p -> true);
-        upcomingData2.setPredicate(item -> LocalDateTime.now().isBefore(LocalDateTime.parse(item.dueDateProperty().get(), df)));
-        pastData2.setPredicate(item -> LocalDateTime.now().isAfter(LocalDateTime.parse(item.dueDateProperty().get(), df)));
+        FilteredList<ObservableEvent> upcomingData = new FilteredList<>(eventData, p -> true);
+        FilteredList<ObservableEvent> pastData = new FilteredList<>(eventData, p -> true);
+        upcomingData.setPredicate(item -> LocalDateTime.now().isBefore(LocalDateTime.parse(item.dueDateProperty().get(), df)));
+        pastData.setPredicate(item -> LocalDateTime.now().isAfter(LocalDateTime.parse(item.dueDateProperty().get(), df)));
 
-        upcoming.setRowFactory(view -> {
+        table.setRowFactory(view -> {
             TableRow<ObservableEvent> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
-                if (event.getClickCount() == 2 && (! row.isEmpty()) ) {
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
                     ObservableEvent rowData = row.getItem();
-                    JFXDialog editDialog = getEventEditDialog(root, eventData, upcomingData2, pastData2, rowData, true);
+                    JFXDialog editDialog = getEventEditDialog(root, eventData, upcomingData, pastData, rowData, true);
                     root.getChildren().add(editDialog);
                     editDialog.show();
                 }
             });
             return row;
         });
-        past.setRowFactory(view -> {
-            TableRow<ObservableEvent> row = new TableRow<>();
-            row.setOnMouseClicked(event -> {
-                if (event.getClickCount() == 2 && (! row.isEmpty()) ) {
-                    ObservableEvent rowData = row.getItem();
-                    JFXDialog editDialog = getEventEditDialog(root, eventData, upcomingData2, pastData2, rowData, false);
-                    root.getChildren().add(editDialog);
-                    editDialog.show();
-                }
-            });
-            return row;
-        });
+        table.setItems(upcomingData);
+        table.getSortOrder().add(dueDateCol);
 
-        upcoming.setItems(upcomingData2);
-        past.setItems(pastData2);
+        HBox eventSelectionBox = new HBox();
+        eventSelectionBox.setSpacing(12);
+        eventSelectionBox.setAlignment(Pos.BASELINE_LEFT);
+        eventSelectionBox.setPadding(new Insets(0, 52, 0, 4));
 
-        upcoming.getSortOrder().add(dueDateColU);
-        past.getSortOrder().add(dueDateCol);
+        Text eventSelectionText = new Text("Showing events:");
+        eventSelectionText.setId("content-content");
+
+        JFXComboBox<String> eventSelection = new JFXComboBox<>();
+        eventSelection.setItems(FXCollections.observableArrayList("Upcoming", "Past"));
+        eventSelection.setValue("Upcoming");
+        eventSelection.valueProperty().addListener(((observable, oldValue, newValue) -> {
+            if (newValue.equals("Upcoming")) {
+                table.getColumns().setAll(items.subList(0, 3));
+                table.setItems(upcomingData);
+            } else {
+                table.getColumns().setAll(items);
+                table.setItems(pastData);
+            }
+        }));
+
+        eventSelectionBox.getChildren().addAll(eventSelectionText, eventSelection);
 
         JFXButton addEvent = new JFXButton();
         addEvent.setGraphic(new FontIcon());
@@ -395,14 +382,14 @@ public class PresenterElements {
         addEvent.getStyleClass().add("animated-option-button");
 
         addEvent.setOnAction(click -> {
-            JFXDialog addDialog = getEventCreateDialog(root, course.idProperty().get());
+            JFXDialog addDialog = getEventCreateDialog(root, eventData, upcomingData, pastData, course.idProperty().get());
             root.getChildren().add(addDialog);
             addDialog.show();
         });
 
         grid.add(infoHeader, 0, 0);
-        grid.add(upcoming, 0, 1);
-        grid.add(past, 0, 2);
+        grid.add(eventSelectionBox, 0, 1);
+        grid.add(table, 0, 2);
 
         JFXNodesList fab = new JFXNodesList();
         fab.addAnimatedNode(addEvent);
@@ -416,7 +403,7 @@ public class PresenterElements {
         return root;
     }
 
-    StackPane getCourseOverviewContent() {
+    StackPane getCourseOverviewContent(boolean isArchived) {
         StackPane root = new StackPane();
         root.setPadding(largerMargin);
 
@@ -427,7 +414,11 @@ public class PresenterElements {
         table.prefHeightProperty().bind(sc.heightProperty().multiply(0.8));
         table.setFixedCellSize(48);
         table.setPadding(mediumMargin);
+        table.setEditable(true);
 
+        ObservableMap<ObservableCourse, BooleanProperty> checkedRows = FXCollections.observableHashMap();
+
+        TableColumn<ObservableCourse, Void> checkCol = new TableColumn<>();
         TableColumn<ObservableCourse, String> codeCol = new TableColumn<>("Course code");
         TableColumn<ObservableCourse, String> nameCol = new TableColumn<>("Course name");
         TableColumn<ObservableCourse, Double> avgCol = new TableColumn<>("Average");
@@ -440,39 +431,120 @@ public class PresenterElements {
         nextEventCol.setCellValueFactory(new PropertyValueFactory<>("nextEvent"));
         nextDueCol.setCellValueFactory(new PropertyValueFactory<>("nextDue"));
 
+        checkCol.prefWidthProperty().bind(table.widthProperty().multiply(0.06));
         codeCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
         nameCol.prefWidthProperty().bind(table.widthProperty().multiply(0.28));
         nextEventCol.prefWidthProperty().bind(table.widthProperty().multiply(0.28));
         nextDueCol.prefWidthProperty().bind(table.widthProperty().multiply(0.16));
-        avgCol.prefWidthProperty().bind(table.widthProperty().multiply(0.12));
+        avgCol.prefWidthProperty().bind(table.widthProperty().multiply(0.10));
 
-        List<TableColumn<ObservableCourse, ?>> items = Arrays.asList(codeCol, nameCol, nextEventCol, nextDueCol, avgCol);
+        List<TableColumn<ObservableCourse, ?>> items = new ArrayList<>(isArchived ?
+                Arrays.asList(codeCol, nameCol, avgCol) :
+                Arrays.asList(codeCol, nameCol, nextEventCol, nextDueCol, avgCol));
         items.forEach(item -> {
             item.getStyleClass().add("text-col");
             item.setResizable(false);
         });
+        items.add(0, checkCol);
 
-        ObservableList<ObservableCourse> courseData = logic.getCourses();
+        CheckBox checkAll = new CheckBox();
+        checkAll.setOnAction(e -> {
+            if (checkAll.isSelected()) {
+                table.getItems().forEach(p ->
+                        checkedRows.computeIfAbsent(p, ObservableCourse -> new SimpleBooleanProperty()).set(true));
+            } else {
+                checkedRows.values().forEach(checked -> checked.set(false));
+            }
+        });
+
+        checkCol.setGraphic(checkAll);
+        checkCol.setEditable(true);
+        checkCol.getStyleClass().add("checkbox-col");
+
+        checkCol.setCellFactory(CheckBoxTableCell.forTableColumn(i ->
+                checkedRows.computeIfAbsent(table.getItems().get(i), p -> new SimpleBooleanProperty())));
+
+        ObservableList<ObservableCourse> courseData = logic.getCourses(isArchived);
 
         table.getColumns().addAll(items);
         table.setItems(courseData);
-
         table.getSortOrder().add(codeCol);
+        table.getItems().addListener((ListChangeListener.Change<? extends ObservableCourse> c) -> {
+            while (c.next()) {
+                if (c.wasRemoved()) {
+                    c.getRemoved().forEach(checkedRows::remove);
+                }
+            }
+        });
+
+        JFXButton editCourse = new JFXButton("");
+        editCourse.setGraphic(new FontIcon());
+        editCourse.setId("edit");
+        editCourse.getStyleClass().add("animated-option-button");
 
         JFXButton addCourse = new JFXButton("");
         addCourse.setGraphic(new FontIcon());
         addCourse.setId("add");
-        addCourse.getStyleClass().add("animated-option-button");
+        addCourse.getStyleClass().add("animated-option-button-sub");
 
-        addCourse.setOnAction(click -> {
+        JFXButton archiveCourse = new JFXButton("");
+        archiveCourse.setGraphic(new FontIcon());
+        archiveCourse.setId("archive-action");
+        archiveCourse.getStyleClass().add("animated-option-button-sub");
+
+        JFXButton unArchiveCourse = new JFXButton("");
+        unArchiveCourse.setGraphic(new FontIcon());
+        unArchiveCourse.setId("un-archive-action");
+        unArchiveCourse.getStyleClass().add("animated-option-button-sub");
+
+        JFXButton deleteCourse = new JFXButton("");
+        deleteCourse.setGraphic(new FontIcon());
+        deleteCourse.setId("delete");
+        deleteCourse.getStyleClass().add("animated-option-button-sub");
+
+        addCourse.setOnAction(action -> {
             JFXDialog addDialog = getCourseCreateDialog(courseData, root, 0.8, 0.9);
             root.getChildren().add(addDialog);
             addDialog.show();
         });
+        archiveCourse.setOnAction(action -> {
+            List<ObservableCourse> archiving = checkedRows.entrySet().stream()
+                    .filter(e -> e.getValue().get())
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toList());
+            archiving.forEach(item -> logic.archiveCourse(item, courseData));
+        });
+        deleteCourse.setOnAction(action -> {
+            List<ObservableCourse> deleting = checkedRows.entrySet().stream()
+                    .filter(e -> e.getValue().get())
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toList());
+            deleting.forEach(item -> logic.deleteCourse(item, courseData));
+        });
+        unArchiveCourse.setOnAction(action -> {
+            List<ObservableCourse> unArchiving = checkedRows.entrySet().stream()
+                    .filter(e -> e.getValue().get())
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toList());
+            unArchiving.forEach(item -> logic.unArchiveCourse(item, courseData));
+        });
 
         JFXNodesList fab = new JFXNodesList();
-        fab.addAnimatedNode(addCourse);
+        JFXNodesList changes = new JFXNodesList();
+        fab.addAnimatedNode(changes);
         setAnchorsCreate(table, fab);
+
+        changes.addAnimatedNode(editCourse);
+        if (!isArchived) {
+            changes.addAnimatedNode(addCourse);
+            changes.addAnimatedNode(archiveCourse);
+        } else {
+            changes.addAnimatedNode(unArchiveCourse);
+        }
+        changes.addAnimatedNode(deleteCourse);
+        changes.setRotate(180);
+        changes.setSpacing(12);
+
         JFXDepthManager.setDepth(anchor, 1);
 
         anchor.getChildren().add(table);
@@ -658,7 +730,7 @@ public class PresenterElements {
                 dialog.close();
                 root.getChildren().remove(dialog);
                 confirmation.enqueue(getSnackbarEvent(root, "Course added, refresh to view the new course tab", 0.64, 0.08));
-                courseData.add(logic.getObservableCourse(courseID, courseCode.get()));
+                courseData.add(logic.getObservableCourse(courseID, courseCode.get(), false));
             } else {
                 System.out.println("not saved");
                 failure.enqueue(getSnackbarEvent(content, "Invalid data, please try again", 0.64, 0.12));
@@ -749,7 +821,7 @@ public class PresenterElements {
         });
 
         ObservableList<ObservableEvent> events = FXCollections.observableArrayList();
-        Map<String, String> courseInfo = logic.getAllCourseInfo();
+        Map<String, String> courseInfo = logic.getAllCourseInfo(false);
         for (String courseID : courseInfo.keySet()) {
             events.addAll(logic.getCourseEvents(courseID, isUpcoming));
         }
@@ -770,8 +842,9 @@ public class PresenterElements {
         tabs.setTabMaxWidth(104);
         tabs.setTabMinHeight(24);
 
+        addTab(tabs, "Courses", getCourseOverviewContent(true));
         addTab(tabs, "Events", getEventOverviewContent(false));
-        addTab(tabs, "Courses", new Label("Not implemented yet."));
+
         return tabs;
     }
 
@@ -840,7 +913,7 @@ public class PresenterElements {
         return dialog;
     }
 
-    JFXDialog getEventCreateDialog(StackPane root, String courseID) {
+    JFXDialog getEventCreateDialog(StackPane root, ObservableList<ObservableEvent> events, FilteredList<ObservableEvent> upcomingEvents, FilteredList<ObservableEvent> pastEvents, String courseID) {
         JFXDialogLayout layout = new JFXDialogLayout();
         JFXDialog dialog = new JFXDialog(root, layout, JFXDialog.DialogTransition.CENTER);
         layout.setId("event-edit-dialog");
@@ -877,6 +950,8 @@ public class PresenterElements {
         HBox actions = new HBox(12);
         actions.setPadding(margin);
 
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
         JFXSnackbar confirmation = new JFXSnackbar(root);
         JFXSnackbar failure = new JFXSnackbar(content);
 
@@ -885,6 +960,8 @@ public class PresenterElements {
         saveAdd.setOnAction(e -> {
             boolean eventAdded = logic.addEvent(nameField.getText(), weightField.getText(), recurring.selectedProperty().get(), datePicker, timePicker, skipDate, occurrence, offset, courseID);
             if (eventAdded) {
+                upcomingEvents.setPredicate(item -> LocalDateTime.now().isBefore(LocalDateTime.parse(item.dueDateProperty().get(), df)));
+                pastEvents.setPredicate(item -> LocalDateTime.now().isAfter(LocalDateTime.parse(item.dueDateProperty().get(), df)));
                 dialog.close();
                 confirmation.enqueue(getSnackbarEvent(root, "Event added, refresh to view the new event", 0.64, 0.08));
             } else {

@@ -3,7 +3,6 @@ package model;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -13,13 +12,14 @@ public class Controller {
     EventManager events = new EventManager();
     LocalGateway gateway = new LocalGateway();
 
-    public void importData(String coursePath, String eventPath) {
-        this.courses.importData(gateway.importCourseData(coursePath));
+    public void importData(String coursePath, String archivedCoursesPath, String eventPath) {
+        this.courses.importData(gateway.importCourseData(coursePath, archivedCoursesPath));
         this.events.importData(gateway.importEventData(eventPath));
     }
 
-    public void exportData(String coursePath, String eventPath) {
-        gateway.exportData(coursePath, courses.exportData());
+    public void exportData(String coursePath, String archivedCoursesPath, String eventPath) {
+        gateway.exportData(coursePath, courses.exportCourses());
+        gateway.exportData(archivedCoursesPath, courses.exportArchivedCourses());
         gateway.exportData(eventPath, events.exportData());
     }
 
@@ -27,6 +27,14 @@ public class Controller {
 
     public String addCourse(String name) {
         return courses.addCourse(name);
+    }
+
+    public void archiveCourse(String courseID) {
+        courses.archiveCourse(courseID);
+    }
+
+    public void unArchiveCourse(String courseID) {
+        courses.unArchiveCourse(courseID);
     }
 
     public void removeCourse(String courseID) {
@@ -101,16 +109,16 @@ public class Controller {
      *
      * @return a map containing all stored courses; key is course ID, value is course code
      */
-    public Map<String, String> getAllCourseInfo() {
-        return courses.getAllCourseInfo();
+    public Map<String, String> getAllCourseInfo(boolean isArchived) {
+        return courses.getAllCourseInfo(isArchived);
     }
 
-    public String getCourseName(String courseID) {
-        return courses.getName(courseID);
+    public String getCourseName(String courseID, boolean isArchived) {
+        return courses.getName(courseID, isArchived);
     }
 
-    public String getCourseCode(String courseID) {
-        return courses.getCode(courseID);
+    public String getCourseCode(String courseID, boolean isArchived) {
+        return courses.getCode(courseID, isArchived);
     }
 
     /**
@@ -120,7 +128,7 @@ public class Controller {
      * @return list of IDs of one time events that are of the course
      */
     public List<String> getCourseEvents(String courseID) {
-        return courses.getOneTime(courseID);
+        return courses.getEvents(courseID);
     }
 
     public double getCourseTargetGrade(String courseID) {
@@ -132,7 +140,7 @@ public class Controller {
     }
 
     public double getCourseAverage(String courseID) {
-        List<String> eventIDs = courses.getOneTime(courseID);
+        List<String> eventIDs = courses.getEvents(courseID);
         double assessed = 0;
         double assessedMax = 0;
         for (String eventID : eventIDs) {

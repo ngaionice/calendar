@@ -4,6 +4,7 @@ import javafx.beans.property.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 public class ObservableCourse {
 
@@ -14,13 +15,13 @@ public class ObservableCourse {
     private final StringProperty nextDue;
     private final StringProperty id;
 
-    public ObservableCourse(String name, String code, String id, double avg, String nextEvent, LocalDateTime nextDue) {
+    public ObservableCourse(String name, String code, String id, double avg, String nextEvent, Optional<LocalDateTime> nextDue) {
         this.name = new SimpleStringProperty(name);
         this.code = new SimpleStringProperty(code);
         this.id = new SimpleStringProperty(id);
         this.avg = new SimpleDoubleProperty(avg);
         this.nextEvent = new SimpleStringProperty(nextEvent);
-        this.nextDue = new SimpleStringProperty(nextDue.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+        this.nextDue = new SimpleStringProperty(nextDue.map(localDateTime -> localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))).orElse("N/A"));
     }
 
     public StringProperty nameProperty() {

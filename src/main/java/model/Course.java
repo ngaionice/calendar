@@ -3,13 +3,12 @@ package model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class Course implements Serializable {
 
     private String name;
     private String code;
-    private final List<String> oneTime = new ArrayList<>();     // list of eventIDs
+    private final List<String> events = new ArrayList<>();     // list of eventIDs
     private final String UUID;
     private double targetGrade = -1;           // default is -1, if not -1 then it has been set
     private final List<String> notes = new ArrayList<>();
@@ -28,12 +27,12 @@ public class Course implements Serializable {
         this.code = code;
     }
 
-    void addOneTime(String eventID) {
-        oneTime.add(eventID);
+    void addEvent(String eventID) {
+        events.add(eventID);
     }
 
-    void removeOneTime(String eventID) {
-        oneTime.remove(eventID);
+    void removeEvent(String eventID) {
+        events.remove(eventID);
     }
 
     void setTargetGrade(double targetGrade) {
@@ -53,8 +52,8 @@ public class Course implements Serializable {
         return code;
     }
 
-    List<String> getOneTime() {
-        return oneTime;
+    List<String> getEvents() {
+        return events;
     }
 
     double getTargetGrade() {

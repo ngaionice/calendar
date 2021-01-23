@@ -1,6 +1,5 @@
 package ui;
 
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -17,7 +16,7 @@ public class Presenter {
     PresenterLogic logic;
 
     public Presenter(Scene scene) {
-        con.importData("courses.ser", "events.ser");
+        con.importData("courses.ser", "archived.ser", "events.ser");
         sc = scene;
         logic = new PresenterLogic(con);
         elements = new PresenterElements(sc, logic);
@@ -25,7 +24,7 @@ public class Presenter {
 
     void setLargeLayout(BorderPane root, BorderPane content) {
         HBox oldHeader = (HBox) content.getTop();
-        Text header = (Text) oldHeader.getChildren().get(0);
+        Text header = (Text) oldHeader.getChildren().get(1);
 
         content.setTop(elements.getLargeLayoutHeader(header.getText()));
         content.setCenter(content.getCenter());
@@ -62,6 +61,6 @@ public class Presenter {
     }
 
     public void exportData() {
-        con.exportData("courses.ser", "events.ser");
+        con.exportData("courses.ser", "archived.ser", "events.ser");
     }
 }

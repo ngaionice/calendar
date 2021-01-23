@@ -7,7 +7,7 @@ import java.util.Map;
 public class CourseManager  {
 
     private Map<String, Course> map;
-    private Map<String, Course> archived = new HashMap<>(20);
+    private Map<String, Course> archived;
 
     // setters
 
@@ -19,6 +19,7 @@ public class CourseManager  {
 
     void removeCourse(String courseID) {
         map.remove(courseID);
+        archived.remove(courseID);
     }
 
     void setName(String courseID, String name) {
@@ -30,11 +31,11 @@ public class CourseManager  {
     }
 
     void addOneTime(String courseID, String eventID) {
-        map.get(courseID).addOneTime(eventID);
+        map.get(courseID).addEvent(eventID);
     }
 
     void removeOneTime(String courseID, String eventID) {
-        map.get(courseID).removeOneTime(eventID);
+        map.get(courseID).removeEvent(eventID);
     }
 
     boolean setTargetGrade(String courseID, double targetGrade) {
@@ -49,28 +50,41 @@ public class CourseManager  {
         map.get(courseID).addNotes(notes);
     }
 
+    void archiveCourse(String courseID) {
+        archived.put(courseID, map.get(courseID));
+        map.remove(courseID);
+    }
+
+    void unArchiveCourse(String courseID) {
+        map.put(courseID, archived.get(courseID));
+        archived.remove(courseID);
+    }
+
     // getters
 
-    String getName(String courseID) {
-        return map.get(courseID).getName();
+    String getName(String courseID, boolean isArchived) {
+        return (!isArchived ? map : archived).get(courseID).getName();
     }
 
-    String getCode(String courseID) {
-        return map.get(courseID).getCode();
+    String getCode(String courseID, boolean isArchived) {
+        return (!isArchived ? map : archived).get(courseID).getCode();
     }
 
-    List<String> getOneTime(String courseID) {
-        return map.get(courseID).getOneTime();
+    List<String> getEvents(String courseID) {
+        if (map.containsKey(courseID)) {
+            return map.get(courseID).getEvents();
+        }
+        return archived.get(courseID).getEvents();
     }
 
     double getTargetGrade(String courseID) {
         return map.get(courseID).getTargetGrade();
     }
 
-    Map<String, String> getAllCourseInfo() {
+    Map<String, String> getAllCourseInfo(boolean isArchived) {
         Map<String, String> info = new HashMap<>(20);
-        for (String courseID: map.keySet()) {
-            info.put(courseID, map.get(courseID).getCode());
+        for (String courseID: (!isArchived ? map : archived).keySet()) {
+            info.put(courseID, (!isArchived ? map : archived).get(courseID).getCode());
         }
         return info;
     }
@@ -79,13 +93,21 @@ public class CourseManager  {
         return map.get(courseID).getNotes();
     }
 
+
+
     // data import/export
 
-    void importData(Map<String, Course> courses) {
-        map = courses;
+    void importData(List<Map<String, Course>> courses) {
+        assert (courses.size() == 2) : "Course data has incorrect length.";
+        map = courses.get(0);
+        archived = courses.get(1);
     }
 
-    Map<String, Course> exportData() {
+    Map<String, Course> exportCourses() {
         return map;
+    }
+
+    Map<String, Course> exportArchivedCourses() {
+        return archived;
     }
 }

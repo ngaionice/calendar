@@ -113,6 +113,11 @@
     -fx-alignment: center-left;
 }
 
+.checkbox-col,
+.checkbox-col .label {
+    -fx-alignment: center;
+}
+
 /*
 Note that to shift tabs left/right, both the 2nd value and 4th value have to be changed together
 */
@@ -195,9 +200,13 @@ floating buttons
 */
 #add .ikonli-font-icon,
 #save .ikonli-font-icon,
+#edit .ikonli-font-icon,
 #left-button .ikonli-font-icon,
 #right-button .ikonli-font-icon,
-#nav-button .ikonli-font-icon {
+#nav-button .ikonli-font-icon,
+#archive-action .ikonli-font-icon,
+#un-archive-action .ikonli-font-icon,
+#delete .ikonli-font-icon {
     -fx-icon-color: white;
     -fx-icon-size: 20px;
 }
@@ -208,6 +217,22 @@ floating buttons
 
 #save .ikonli-font-icon {
     -fx-icon-code: "mdi-content-save";
+}
+
+#edit .ikonli-font-icon {
+    -fx-icon-code: "mdi-pencil"
+}
+
+#archive-action .ikonli-font-icon {
+    -fx-icon-code: "mdi-package-down";
+}
+
+#delete .ikonli-font-icon {
+    -fx-icon-code: "mdi-delete";
+}
+
+#un-archive-action .ikonli-font-icon {
+    -fx-icon-code: "mdi-package-up";
 }
 
 #add-event .ikonli-font-icon {
@@ -225,7 +250,7 @@ floating buttons
 }
 
 #nav-button .ikonli-font-icon {
-    -fx-icon-code: "mdi-dots-vertical";
+    -fx-icon-code: "mdi-menu";
 }
 
 .jfx-text-field {
@@ -233,12 +258,20 @@ floating buttons
     -fx-text-fill: #FFF;
 }
 
+.jfx-combo-box {
+    -jfx-focus-color: -fx-accent;
+}
+
+.jfx-combo-box .jfx-rippler {
+    -jfx-rippler-fill: white;
+}
+
 #time-picker .jfx-time-picker {
     -fx-border-color: transparent;
 }
 
-.animated-option-button {
-    -fx-background-color: #FF9800;
+.animated-option-button,
+.animated-option-button-sub {
     -fx-background-radius: 50px;
     -fx-pref-height: 50px;
     -fx-pref-width: 50px;
@@ -249,8 +282,17 @@ floating buttons
     -jfx-button-type: RAISED;
 }
 
+.animated-option-button {
+    -fx-background-color: #FF9800;
+}
+
+.animated-option-button-sub {
+    -fx-background-color: #FFC947;
+}
+
 #left-button,
-#right-button {
+#right-button,
+#nav-button {
     -fx-background-radius: 24px;
     -fx-pref-height: 24px;
     -fx-pref-width: 24px;
@@ -265,7 +307,12 @@ floating buttons
     -jfx-rippler-fill: -fx-accent;
 }
 
-.animated-option-button .jfx-rippler{
+#nav-button .jfx-rippler {
+    -jfx-rippler-fill: white;
+}
+
+.animated-option-button .jfx-rippler,
+.animated-option-button-sub .jfx-rippler{
     -jfx-rippler-fill: #FFF;
 }
 
@@ -339,6 +386,12 @@ floating buttons
 #content-supersize {
     -fx-font-family: "Roboto Medium";
     -fx-font-size: 20px;
+    -fx-fill: white;
+}
+
+#content-content {
+    -fx-font-family: "Roboto Regular";
+    -fx-font-size: 12px;
     -fx-fill: white;
 }
 
